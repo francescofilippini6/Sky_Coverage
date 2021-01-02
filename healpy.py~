@@ -1,0 +1,11 @@
+import numpy as np
+import healpy as hp
+
+NPIX = hp.nside2npix(NSIDE)
+print(NPIX)
+
+NSIDE = 32
+#print("Approximate resolution at NSIDE {} is {:.2} deg".format(NSIDE, hp.nside2resol(NSIDE, arcmin=True) / 60))
+
+NPIX = hp.nside2npix(NSIDE)
+print(NPIX)

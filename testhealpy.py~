@@ -1,0 +1,53 @@
+from skyfield.api import load
+from skyfield.api import Topos
+import math
+
+from matplotlib import pyplot as plt
+import numpy as np
+import healpy as hp
+
+NSIDE = 32 # this sets the side resolution of each one of the 12 basic-macro pixels
+print(
+    "Approximate resolution at NSIDE {} is {:.2} deg".format(
+        NSIDE, hp.nside2resol(NSIDE, arcmin=True) / 60
+    )
+)
+
+#m = np.arange(hp.nside2npix(NSIDE))
+#print ("number of pixels:", len(m))
+NPIX = hp.nside2npix(NSIDE)
+print("number of pixels in the map",NPIX)
+
+#generate m= from 0 to NPIX elements and fill the  map
+
+#m = np.arange(NPIX)
+m = np.zeros(hp.nside2npix(NSIDE))
+theta=[np.pi, np.pi/2,np.pi/4]
+phi=[0,0,0]
+data = np.arange(3)
+pixel_indices = hp.ang2pix(NSIDE, theta, phi)
+m[pixel_indices] = data
+
+#pixel_array_ring =np.ndarray(len(m))
+#if (alt.degrees>=0) :
+#      if (alt.degrees<0) :
+#      if (1>0) :
+#          zen_rad=(myPiOver2-alt.radians)
+#          pixind= hp.ang2pix(NSIDE,alt.radians,az.radians,nest=False) #inverted
+#          pixind= hp.ang2pix(NSIDE,zen_rad,az.radians,nest=False)
+#          pixel_array_ring[pixind]=pixel_array_ring[pixind]+1
+
+#          pixind= hp.ang2pix(NSIDE,alt.radians,az.radians,nest=True) #inverted#
+#          pixind= hp.ang2pix(NSIDE,zen_rad,az.radians,nest=True)
+#          pixel_array_nest[pixind]=pixel_array_nest[pixind]+1
+
+hp.mollview(m, title="Mollview image RING")
+#hp.mollview(pixel_array_ring, nest=False, title="Mollview image RING",unit=r'Number of occurrences per pixel', min=0, max=16, norm='none',xsize=2000,fig=1)
+#hp.write_map("my_map_ring.fits",pixel_array_ring)
+#hp.visufunc.graticule(dpar=10,dmer=10,local=True)
+hp.graticule()
+plt.show()
+
+
+vec = hp.ang2vec(np.pi / 2, np.pi * 3 / 4)
+print(vec)

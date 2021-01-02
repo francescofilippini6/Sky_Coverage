@@ -1,0 +1,29 @@
+Author - Tommaso Chiarusi 2017-2018
+
+* Preliminary note: you need to install or upgrade the library "skyfield"
+
+pip install skyfield --upgrade
+
+
+Refer to the tutorial for the "healpix" features for the Mollview representation.
+
+* Two programs: 
+1) moon_map_corr.py  # to simply plot the position of moon in zenith-azimuth plane
+2) moon_map_moll.py  # plot the moon position in the mollview representation
+
+* note: 
+
+- edit the file to change the period of interest
+- for 2) change the "options" [...] argument before launching the python script to redo the maps (option 0) or make drawings (option 1)
+
+
+* execution
+
+- needed python  v ≥ 3.6
+
+> python moon_map_moll.py
+ 
+
+the very first time with option 0, a file called "de421.bsp" will be created
+
+
