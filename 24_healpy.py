@@ -125,9 +125,17 @@ def cat2hpx(lon, lat, nside, radec=True):
 #hp.graticule()
 #plt.show()
 
+#---------------------
+#producing the galactic equator
+#---------------------
+equator = SkyCoord(np.linspace(0,360,256), np.zeros(256), frame='icrs', unit=u.deg)
+equator_in_gal = equator.galactic
 
 
+#------------------------------------------------
 #making a second cycle , dividing the generation and the plotting phase
+#------------------------------------------------
+
 f2=plt.figure()
 f2.suptitle("Cumulative simulation with 24 x "+str(sim_points)+"points")
 cumulative=f2.add_subplot(111)
@@ -155,58 +163,70 @@ for hou in range(24):
     #------create the object SkyCoord with the intersection
     Common_sky=SkyCoord(intersect_col,intersect_row,frame='galactic', unit=u.deg)
     #print(len(Common_sky.l.deg),len(Common_sky.b.deg))
-    f=plt.figure()
+    #-------------------------------------------------------
+    #          starting the plotting functions
+    #-------------------------------------------------------
+    f=plt.figure(figsize=(20, 10))
     f.suptitle("simulation with"+str(sim_points)+"points")
-
+    #-------------------------------------------------------
     sca=f.add_subplot(231)
     sca.grid(True)
     sca.plot(totalArca[hou].l.wrap_at('180d').deg,totalArca[hou].b.deg,'+',markersize=2, color='b')
+    sca.plot(equator_in_gal.l.wrap_at('180d').deg, equator_in_gal.b.deg,'*',markersize=2, color='k')
     sca.set_title(str(hou)+'_hour_Arca_Plane')
     sca.set_xlim(180,-180)
     
+    #-------------------------------------------------------
     sc=f.add_subplot(232)
     sc.grid(True)
     sc.plot(totallh[hou].l.wrap_at('180d').deg,totallh[hou].b.deg,'+',markersize=2, color='r')
+    sc.plot(equator_in_gal.l.wrap_at('180d').deg, equator_in_gal.b.deg,'*',markersize=2, color='k')
     sc.set_title(str(hou)+'_hour_Lhasoo_Plane')
     sc.set_xlim(180,-180)
-    
+    #-------------------------------------------------------
     hh=f.add_subplot(233)
     hh.grid(True)
     hh.plot(Common_sky.l.wrap_at('180d').deg,Common_sky.b.deg,'+',markersize=2, color='g')
+    hh.plot(equator_in_gal.l.wrap_at('180d').deg, equator_in_gal.b.deg,'*',markersize=2, color='k')
     hh.set_title(str(hou)+'_hour_intersection_Plane')
     hh.set_xlim(180,-180)
+    #-------------------------------------------------------
 
     m1=f.add_subplot(234)
     hp.visufunc.mollview(np.log10(cat2hpx(totalArca[hou].l.wrap_at('180d').deg, totalArca[hou].b.deg, nside=32, radec=False)+1),hold=True,title=str(hou)+'_hour_ARCA_Moll')
     hp.graticule()
-
-
+    #-------------------------------------------------------
 
     m2=f.add_subplot(235)
     hp.visufunc.mollview(np.log10(cat2hpx(totallh[hou].l.wrap_at('180d').deg, totallh[hou].b.deg, nside=32, radec=False)+1),hold=True,title=str(hou)+'_hour_Lhasoo_Moll')
     hp.graticule()
-
-
+    #-------------------------------------------------------
 
     m3=f.add_subplot(236)
     hp.mollview(np.log10(cat2hpx(Common_sky.l.wrap_at('180d').deg, Common_sky.b.deg, nside=32, radec=False)+1),hold=True,title=str(hou)+'_hour_intersection_Moll')
     hp.graticule()
-
-    
-
+    #-------------------------------------------------------
     #plt.show()
-    #plt.tight_layout()
+
+    #f.canvas.manager.full_screen_toggle() # toggle fullscreen mode
     f.savefig('/Users/francescofilippini/Desktop/Sky_coverage/Common_sky_plot/'+str(hou)+'_hour_common_sky_A.png')
     print("saved figure n."+str(hou))
     #plt.show()
-    #---building the sky coverage considering the pixels in commmon, each is a square of 2 deg x 2 deg = 4 deg square / the solid angle in degree (41253) x 100 to have the percentage
+    #-------------------------------------------------------
+    #building the sky coverage considering the pixels in commmon,
+    #each is a square of 2 deg x 2 deg = 4 deg square / the solid angle in degree (41253) x 100 to have the percentage
+    #-------------------------------------------------------
     intersection_solid_angle = (pixelcounter*4*100)/41253  
     sky_coverage.append(intersection_solid_angle)
     #-----------------------------------------------------------------------
     cumulative.plot(Common_sky.l.wrap_at('180d').deg,Common_sky.b.deg,'+',markersize=2, color='g')
+    #-------------------------------------------------------
+    
 f2.savefig('/Users/francescofilippini/Desktop/Sky_coverage/Common_sky_plot/Cumulative_intersection_A.png')
 
+#-------------------------------------------------------
 #plotting the skycoverage function over time
+#-------------------------------------------------------
 t = np.arange(0, 24, 1)
 f3=plt.figure()
 ax=f3.add_subplot(111)

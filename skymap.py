@@ -24,9 +24,9 @@ gal = eq.galactic
 #gal = SkyCoord(xarr[:], yarr[:], frame='galactic', unit=u.deg)
 
 
-plt.subplot(111, projection='aitoff')
+plt.subplot(111)#, projection='aitoff')
 plt.grid(True)
-plt.scatter(gal.l.wrap_at('180d').radian, gal.b.radian)
-plt.scatter(eq.ra.wrap_at('180d').radian, eq.dec.radian)
+plt.scatter(gal.l.wrap_at('180d').deg, gal.b.deg)
+#plt.scatter(eq.ra.wrap_at('180d').radian, eq.dec.radian)
 plt.savefig('galactic_&_equatorial.png')
 plt.show()

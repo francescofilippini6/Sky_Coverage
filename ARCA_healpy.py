@@ -44,6 +44,7 @@ for t in range(24):
     bg.append(gal.b.deg)
     total.append(gal)
 
+eqsky=total[12].transform_to('icrs')
 #--------------------------------------------------------------
 # Setting of healpy resolution map and n. of pixels
 #--------------------------------------------------------------
@@ -103,9 +104,18 @@ def cat2hpx(lon, lat, nside, radec=True):
 #setting to zero all the map m
 #--------------------------------------------------------------
 m = np.zeros(hp.nside2npix(NSIDE))
+commonl=[]
+commonb=[]
+for tt in range(24):
+    for a in range(len(total[tt].l.deg)):
+        commonl.append(total[tt].l[a].deg)
+        commonb.append(total[tt].b[a].deg)
+        
 
-hpx_map = cat2hpx(total[1].l.deg, total[1].b.deg, nside=32, radec=False)
+common = SkyCoord(commonl, commonb,frame='galactic', unit='deg')
+hpx_map = cat2hpx(common.l.deg, common.b.deg, nside=32, radec=False)
+#hpx_map = cat2hpx(eqsky.ra.deg,eqsky.dec.deg, nside=32, radec=False)
 #hp.mollview(hpx_map, title="Mollview image RING")
-hp.mollview(np.log10(hpx_map+1))
+hp.mollview(np.log10(hpx_map+1), title="ARCA sky coverage")
 hp.graticule()
 plt.show()
