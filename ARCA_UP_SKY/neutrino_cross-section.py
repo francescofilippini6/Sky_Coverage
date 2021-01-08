@@ -143,35 +143,83 @@ def int_lentgth_earth(theta):
 
 
 def atmosphere(h):
-        if h < 10:  # h in km
-                return 1.225 *10**-3 * m.exp(h/9.192)
-        elif h > 10 and h< 180:
-                return 1.944 *10**-3 * m.exp(h/6.452)
+        ss=[]
+        if hasattr(h, "__len__"):
+                for a in h:
+                        if a > EarthRadius+5 and  a < EarthRadius+15:  # h in km
+                                a-=(EarthRadius+5)
+                                ss.append(1.225 *10**-3 * m.exp(-a/9.192))
+                        elif a > EarthRadius+15 and a< EarthRadius+105:
+                                a-=(EarthRadius+5)
+                                ss.append(1.944 *10**-3 * m.exp(-a/6.452))
+                        else:
+                                print("Too high!!")
+                                ss.append(0)
+                return(ss)
         else:
-                print("Too high!!")
-                return 0
+                if h > EarthRadius+5 and  h < EarthRadius+15:  # h in km
+                        h-=(EarthRadius+5)
+                        return 1.225 *10**-3 * m.exp(-h/9.192)
+                elif h > EarthRadius+15 and h< EarthRadius+105:
+                        h-=(EarthRadius+5)
+                        return 1.944 *10**-3 * m.exp(-h/6.452)
+                else:
+                        print("Too high!!")
+                        return 0
 
 def int_length_atm(theta):
         distance_from_center = EarthRadius*np.sin(np.radians(180-theta))
         print("D",distance_from_center)
         integral_extrema=[]
         integral_extrema.append(np.arccos(distance_from_center/EarthRadius))
-        integral_extrema.append(np.arccos(distance_from_center/EarthRadius+10))
-        integral_extrema.append(np.arccos(distance_from_center/EarthRadius+10))
+        integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+15)))
+        integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+105)))
         print("Extremis",integral_extrema)
         final=[]
         for a in range(2):
                 integrand = lambda x: atmosphere(distance_from_center/np.cos(x)) * distance_from_center*10**5/(np.cos(x)*np.cos(x))
                 Integral=quad(integrand,integral_extrema[a],integral_extrema[a+1])
                 final.append(Integral[0])
-        print("FINAL value of the integral contributions",final)
+        print("FINAL values for ATMOSPHERE",final)
         int_length=sum(final)
-        print("sum of contributions:",int_length)
+        print("ATMOSPHERE sum of contributions:",int_length)
         return(int_length)
+
+
+def sea(h):
+        ss=[]
+        if hasattr(h, "__len__"):
+                for a in h:
+                        if a > EarthRadius*10**5 and  a < EarthRadius*10**5+2000:  # h in cm
+                                a-=EarthRadius*10**5
+                                ss.append(1.040)
+                        elif a > EarthRadius*10**5+2000 and a< EarthRadius*10**5+5000:
+                                a-=EarthRadius*10**5
+                                ss.append(1.040)
+                        else:
+                                print("Too high!!")
+                                ss.append(0)
+                return(ss)
+        else:
+                if h > EarthRadius*10**5 and  h < EarthRadius*10**5+2000:  # h in cm
+                        h-=EarthRadius*10**5
+                        return 1.040
+                elif h > EarthRadius*10**5+2000 and h< EarthRadius*10**5+5000:
+                        h-=EarthRadius*10**5
+                        return 1.040
+                else:
+                        print("Too high!!")
+                        return 0
+        
+
+def sea_profile(theta):
+        h=3.5*10**5
+        return 1.040*h/np.cos(np.radians(theta))
 
 #print(91)
 #int_lentgth_earth(91)
-int_length_atm(179.9)
+#int_lentgth_earth(150)
+#int_length_atm(90.001)
         
 #-------------------------------------------------------------
 # Plotting functions
@@ -183,11 +231,17 @@ y_line = fitfuncUND(x_line, a, b)
 x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(x_lineO)
 radius=np.linspace(0,EarthRadius,100)
-tttheta=np.linspace(90.01,179.9,100)
+hatm=np.linspace(EarthRadius+5,EarthRadius+105,100)
+hsea=np.linspace(EarthRadius*10**5+1,EarthRadius*10**5+4999,100)
+ttheta=np.linspace(0.1,89.9,100)
+stheta=np.linspace(90.01,179.9,100)
 cc=[]
-for aa in tttheta:
+for aa in stheta:
      cc.append(int_lentgth_earth(aa))   
-print(tttheta)
+#print(stheta)
+dd=[]
+for bb in stheta:
+        dd.append(int_length_atm(bb))
 f=plt.figure()
 ax1=f.add_subplot(311)
 df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='red',ax=ax1, logx=True, logy=True)
@@ -209,8 +263,34 @@ ax.plot(radius, density_profile(radius), 'b-')
 ax.set_ylabel('Density')
 ax.set_xlabel('Earth radius (km)')
 ax4=f2.add_subplot(122)
-#ax4.plot(tttheta,int_lentgth_earth(tttheta),'b--')
-ax4.plot(tttheta,cc,'b--')
-ax4.set_ylabel('xrho (g/cm^2')
+#ax4.plot(stheta,int_lentgth_earth(stheta),'b--')
+ax4.plot(stheta,cc,'b--')
+ax4.set_title('Earth')
+ax4.set_ylabel('x rho (g/cm^2)')
 ax4.set_xlabel('zenith angle (deg)')
+f3=plt.figure()
+ax5=f3.add_subplot(121)
+ax5.plot(hatm, atmosphere(hatm),'+',markersize=2, color='g')
+ax5.set_ylabel('Density')
+ax5.set_xlabel('Atmoosphere height (km)')
+ax5.set_yscale('log')
+ax6=f3.add_subplot(122)
+#ax6.plot(stheta,int_length_atm(stheta),'b--')
+ax6.plot(stheta,dd,'g--')
+ax6.set_ylabel('x rho (g/cm^2)')
+ax6.set_xlabel('zenith angle (deg)')
+
+f4=plt.figure()
+ax7=f4.add_subplot(121)
+ax7.plot(hsea, sea(hsea),'+',markersize=2, color='b')
+ax7.set_ylabel('Sea Density')
+ax7.set_xlabel('Sea height (km)')
+ax8=f4.add_subplot(122)
+#ax6.plot(stheta,int_length_atm(stheta),'b--')
+#ax8.plot(ttheta,sea_profile((3.5+EarthRadius)*10**5,ttheta),'g--')
+ax8.plot(ttheta,sea_profile(ttheta),'g--')
+#ax8.plot(stheta,sea_profile(3.5+EarthRadius),'g--')
+ax8.set_ylabel('x rho (g/cm^2)')
+ax8.set_xlabel('zenith angle (deg)')
+ax8.set_yscale('log')
 plt.show()
