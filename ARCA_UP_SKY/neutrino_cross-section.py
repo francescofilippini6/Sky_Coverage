@@ -250,9 +250,21 @@ def sea_profile(theta):
         return 1.040*h/abs(np.cos(np.radians(theta)))
 
 
-
-
-
+def total_slant(theta):
+        ss=[]
+        if hasattr(theta, "__len__"):
+                for a in theta:
+                        if a < 90:
+                                ss.append(int_length_atm(a)+sea_profile(a))
+                        else:
+                                ss.append(int_length_atm(a)+sea_profile(a)+int_lentgth_earth(a))
+                return(ss)
+        else:
+                if theta < 90:
+                        return int_length_atm(theta)+sea_profile(theta)
+                else:
+                        return int_length_atm(theta)+sea_profile(theta)+int_lentgth_earth(theta)
+                
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -272,9 +284,12 @@ for aa in stheta:
      cc.append(int_lentgth_earth(aa))   
 #print(stheta)
 dd=[]
-for bb in ttheta:
+for bb in stheta:
         dd.append(int_length_atm(bb))
 
+
+
+zenithy=np.linspace(0,179.9,1000)
 #-------------------------------------------------------------
 # Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
 #-------------------------------------------------------------
@@ -325,9 +340,10 @@ ax5.set_xlabel('Atmoosphere height (km)')
 ax5.set_yscale('log')
 ax6=f3.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
-ax6.plot(ttheta,dd,'g--')
+ax6.plot(stheta,dd,'g--')
 ax6.set_ylabel('x rho (g/cm^2)')
 ax6.set_xlabel('zenith angle (deg)')
+ax6.set_yscale('log')
 f3.suptitle('Atmosphere')
 #-------------------------------------------------------------
 # Sea: 7) density profile vs height (0 = sea bed, 3.5*10**5 sea level for ARCA;
@@ -342,10 +358,21 @@ ax7.set_xlabel('Sea height (km)')
 ax8=f4.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
 #ax8.plot(ttheta,sea_profile((3.5+EarthRadius)*10**5,ttheta),'g--')
-ax8.plot(180-ttheta,sea_profile(180-ttheta),'g--')
+ax8.plot(stheta,sea_profile(stheta),'g--')
 #ax8.plot(stheta,sea_profile(3.5+EarthRadius),'g--')
 ax8.set_ylabel('x rho (g/cm^2)')
 ax8.set_xlabel('zenith angle (deg)')
 ax8.set_yscale('log')
 f4.suptitle('Sea')
+
+#-------------------------------------------------------------
+# TOTAL SLANT DEPTH vs ZENITH ANGLE
+#-------------------------------------------------------------
+f5=plt.figure()
+ax9=f5.add_subplot(111)
+ax9.plot(zenithy,total_slant(zenithy),'+',markersize=2, color='r')
+ax9.set_ylabel('x rho (g/cm^2)')
+ax9.set_xlabel('zenith angle (deg)')
+ax9.set_yscale('log')
+f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 plt.show()
