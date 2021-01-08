@@ -10,12 +10,24 @@ from scipy.integrate import quad
 # "Ultrahigh-Energy Neutrino Interactions" Raj Gandhi
 #-----------------------------------------------
 ncs={
-    'Energy (GeV)':[10**1,10**2,10**3,10**4,10**5,10**6,10**7,10**8,10**9,10**10,10**11,10**12],
-    'CrossSectionCC':[0.777*10**(-37),0.697*10**(-36),0.625*10**(-35),0.454*10**(-34),0.196*10**(-33),0.611*10**(-33),0.176*10**(-32),0.478*10**(-32),0.123*10**(-31),0.301*10**(-31),0.706*10**(-31),0.159*10**(-30)],
-    'minelasticityCC':[0.483,0.477,0.472, 0.426,0.332,0.273,0.250,0.237,0.225,0.216,0.208,0.205]}
+        'Energy (GeV)':[10**1,10**2,10**3,10**4,10**5,10**6,10**7,10**8,10**9,10**10,10**11,10**12],
+        'CrossSectionCC':[0.777*10**(-37),0.697*10**(-36),0.625*10**(-35),0.454*10**(-34),0.196*10**(-33),0.611*10**(-33),0.176*10**(-32),0.478*10**(-32),0.123*10**(-31),0.301*10**(-31),0.706*10**(-31),0.159*10**(-30)],
+        'minelasticityCC':[0.483,0.477,0.472, 0.426,0.332,0.273,0.250,0.237,0.225,0.216,0.208,0.205]}
+
+simulatedncs={
+        'Energy (GeV)':[1.00*10,1.26*10,1.58*10,2.00*10,2.51*10,3.16*10,3.98*10,5.01*10,6.31*10,7.94*10,1*10**2,1.26*10**2,1.58*10**2,2.00*10**2,2.51*10**2,3.16*10**2,3.98*10**2,5.01*10**2,6.31*10**2,7.94*10**2,1*10**3,1.26*10**3,1.58*10**3,2.00*10**3,2.51*10**3,3.16*10**3,3.98*10**3,5.01*10**3,6.31*10**3,7.94*10**3,1*10**4,1.26*10**4,1.58*10**4,2.00*10**4,2.51*10**4,3.16*10**4,3.98*10**4,5.01*10**4,6.31*10**4,7.94*10**4,1*10**5,1.26*10**5,1.58*10**5,2.00*10**5,2.51*10**5,3.16*10**5,3.98*10**5,5.01*10**5,6.31*10**5,7.94*10**5,1*10**6,1.26*10**6,1.58*10**6,2.00*10**6,2.51*10**6,3.16*10**6,3.98*10**6,5.01*10**6,6.31*10**6,7.94*10**6,1*10**7],
+        'CrossSCC': [ 8.08*10**-38, 1*10**-37, 1.24*10**-37, 1.55*10**-37, 1.92*10**-37, 2.39*10**-37, 2.96*10**-37,3.69*10**-37,4.58*10**-37,5.71*10**-37,7.1*10**-37,8.85*10**-37,1.1*10**-36,1.38*10**-36,1.71*10**-36,2.14*10**-36,2.67*10**-36,3.32*10**-36,4.14*10**-36,5.15*10**-36,6.39*10**-36,7.93*10**-36,9.81*10**-36,1.21*10**-35,1.49*10**-35,1.83*10**-35,2.23*10**-35,2.71*10**-35,3.28*10**-35,3.95*10**-35,4.72*10**-35,5.62*10**-35,6.65*10**-35,7.83*10**-35,9.16*10**-35,1.07*10**-34,1.24*10**-34,1.43*10**-34,1.64*10**-34,1.88*10**-34,2.14*10**-34,2.44*10**-34,2.76*10**-34,3.13*10**-34,3.53*10**-34,3.97*10**-34,4.47*10**-34,5.01*10**-34,5.62*10**-34,6.29*10**-34,7.02*10**-34,7.84*10**-34,8.73*10**-34,9.72*10**-34,1.08*10**-33,1.2*10**-33,1.33*10**-33,1.47*10**-33,1.63*10**-33,1.8*10**-33,1.99*10**-33],
+        'CrossNC':[2.49*10**-38,3.09*10**-38, 3.84*10**-38, 4.78*10**-38, 5.93*10**-38, 7.37*10**-38, 9.17*10**-38, 1.14*10**-37, 1.42*10**-37, 1.77*10**-37, 2.2*10**-37, 2.74*10**-37, 3.42*10**-37, 4.27*10**-37, 5.33*10**-37, 6.65*10**-37, 8.3*10**-37, 1.04*10**-36, 1.29*10**-36, 1.61*10**-36, 2*10**-36, 2.49*10**-36, 3.09*10**-36, 3.83*10**-36, 4.73*10**-36, 5.83*10**-36, 7.16*10**-36, 8.75*10**-36, 1.07*10**-35, 1.29*10**-35, 1.56*10**-35, 1.87*10**-35, 2.23*10**-35, 2.64*10**-35, 3.11*10**-35, 3.65*10**-35, 4.27*10**-35, 4.96*10**-35, 5.74*10**-35, 6.61*10**-35, 7.59*10**-35, 8.68*10**-35, 9.89*10**-35, 1.12*10**-34, 1.28*10**-34, 1.44*10**-34, 1.63*10**-34, 1.83*10**-34, 2.06*10**-34, 2.32*10**-34, 2.6*10**-34, 2.91*10**-34, 3.25*10**-34, 3.62*10**-34, 4.04*10**-34, 4.5*10**-34, 5*10**-34, 5.56*10**-34, 6.16*10**-34, 6.83*10**-34, 7.56*10**-34],
+
+        'Total_CS':[]
+
+}
+for a in range(len(simulatedncs['CrossSCC'])):
+        simulatedncs['Total_CS'].append(simulatedncs['CrossSCC'][a]+simulatedncs['CrossNC'][a])
 
 df = pd.DataFrame(data=ncs)
-print(df)
+simulated = pd.DataFrame(data=simulatedncs)
+print(simulated)
 
 #-----------------------------------------------
 # Fit of the linear part till 10^12 eV
@@ -31,10 +43,13 @@ print("LINEAR PARAM. FIT",a,b)
 #extrapolate the function for 10^16<E<10^21 eV as in article
 #-----------------------------------------------
 
-const=2.69*10**-36
-index=0.402
+constCC=2.69*10**-36
+indexCC=0.402
 
-def fitfuncOVE(x):
+constNC=1.06*10**-36
+indexNC=0.408
+
+def fitfuncOVE(const,index,x):
         ss=[]
         if hasattr(x, "__len__"):
                 for a in x:
@@ -46,13 +61,13 @@ def fitfuncOVE(x):
 #----------------------------------------------
 # defining the interaction length in mwe
 #-----------------------------------------------
-Na=6.022*10**23
 
+Na=6.022*10**23
 def buildingLint(x):
-        if x <= 10**3:
-                return 1/(Na*fitfuncUND(x, a, b))
+        if x <= 1*10**7:
+                return 1/(Na*simulatedncs['Total_CS'])
         elif x>= 10**6:
-                return 1/(Na*fitfuncOVE(x))
+                return 1/(Na*fitfuncOVE(constCC,indexCC,x))
         else:
                 print("region between 10**12 and 10**16, still problem")
                 return 0
@@ -168,7 +183,7 @@ def atmosphere(h):
                                 a-=(EarthRadius+5)
                                 ss.append(1.944 *10**-3 * m.exp(-a/6.452))
                         else:
-                                print("Too high!!")
+                                #print("Too high!!")
                                 ss.append(0)
                 return(ss)
         else:
@@ -179,7 +194,7 @@ def atmosphere(h):
                         h-=(EarthRadius+5)
                         return 1.944 *10**-3 * m.exp(-h/6.452)
                 else:
-                        print("Too high!!")
+                        #print("Too high!!")
                         return 0
 
 def int_length_atm(theta):
@@ -225,7 +240,7 @@ def sea(h):
                                 a-=EarthRadius*10**5
                                 ss.append(1.040)
                         else:
-                                print("Too high!!")
+                                #print("Too high!!")
                                 ss.append(0)
                 return(ss)
         else:
@@ -236,7 +251,7 @@ def sea(h):
                         h-=EarthRadius*10**5
                         return 1.040
                 else:
-                        print("Too high!!")
+                        #print("Too high!!")
                         return 0
         
 
@@ -265,6 +280,12 @@ def total_slant(theta):
                 else:
                         return int_length_atm(theta)+sea_profile(theta)+int_lentgth_earth(theta)
                 
+
+
+#def number_of_Lint():
+        
+
+
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -273,7 +294,11 @@ x_line = np.linspace(10**1,10**3, 100)
 y_line = fitfuncUND(x_line, a, b)
 
 x_lineO = np.linspace(10**6,10**12, 100)
-y_lineO=fitfuncOVE(x_lineO)
+y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
+y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
+y_line_total=[]
+for a in range(len(y_lineO)):
+        y_line_total.append(y_lineO[a]+y_lineNC[a])
 radius=np.linspace(0,EarthRadius,100)
 hatm=np.linspace(EarthRadius+5,EarthRadius+atm_sup_limit,100)
 hsea=np.linspace(EarthRadius*10**5+1,EarthRadius*10**5+4999,100)
@@ -295,9 +320,14 @@ zenithy=np.linspace(0,179.9,1000)
 #-------------------------------------------------------------
 f=plt.figure()
 ax1=f.add_subplot(311)
-df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='red',ax=ax1, logx=True, logy=True)
-ax1.plot(x_line,y_line,'b--')
+df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='green',ax=ax1, logx=True, logy=True)
+simulated.plot(kind='scatter',x='Energy (GeV)',y='Total_CS',color='red',ax=ax1, logx=True, logy=True)
+simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossSCC',color='green',ax=ax1, logx=True, logy=True)
+simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossNC',color='blue',ax=ax1, logx=True, logy=True)
+#ax1.plot(x_line,y_line,'b--')
 ax1.plot(x_lineO,y_lineO,'g--')
+ax1.plot(x_lineO,y_lineNC,'b--')
+ax1.plot(x_lineO,y_line_total,'r--')
 ax1.set_title('nu N CC Cross Section')
 ax2=f.add_subplot(312)
 df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
