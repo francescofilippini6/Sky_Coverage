@@ -110,6 +110,11 @@ def buildingDensity(r):
                 return 0
 
 def density_profile(r):
+        """
+        call the buildingDensity function for r = scalar or list
+        return the density value for the given r
+        """
+
         ss=[]
         if hasattr(r, "__len__"):
                 for a in r:
@@ -121,6 +126,12 @@ def density_profile(r):
 
 
 def int_lentgth_earth(theta):
+        """
+        integral of rho x dl (g/cm^2)
+        each integral calculated in angle x from cos-1(D/Ri) to cos-1(D/Ri+1)
+        where Ri is the radius of the i-th concentric Earth shell
+        for i = 0 Ri=0
+        """
         distance_from_center = EarthRadius*np.sin(np.radians(180-theta))
         print("D",distance_from_center)
         status=buildingDensity(distance_from_center)[1]
@@ -141,15 +152,19 @@ def int_lentgth_earth(theta):
         print("sum of contributions:",int_length)
         return(int_length)
 
-
+atm_sup_limit=455
 def atmosphere(h):
+        """
+        model of the density profile of the atmosphere
+        h in km
+        """
         ss=[]
         if hasattr(h, "__len__"):
                 for a in h:
                         if a > EarthRadius+5 and  a < EarthRadius+15:  # h in km
                                 a-=(EarthRadius+5)
                                 ss.append(1.225 *10**-3 * m.exp(-a/9.192))
-                        elif a > EarthRadius+15 and a< EarthRadius+105:
+                        elif a > EarthRadius+15 and a< EarthRadius+atm_sup_limit:
                                 a-=(EarthRadius+5)
                                 ss.append(1.944 *10**-3 * m.exp(-a/6.452))
                         else:
@@ -160,7 +175,7 @@ def atmosphere(h):
                 if h > EarthRadius+5 and  h < EarthRadius+15:  # h in km
                         h-=(EarthRadius+5)
                         return 1.225 *10**-3 * m.exp(-h/9.192)
-                elif h > EarthRadius+15 and h< EarthRadius+105:
+                elif h > EarthRadius+15 and h< EarthRadius+atm_sup_limit:
                         h-=(EarthRadius+5)
                         return 1.944 *10**-3 * m.exp(-h/6.452)
                 else:
@@ -168,12 +183,20 @@ def atmosphere(h):
                         return 0
 
 def int_length_atm(theta):
+        """
+        integral of rho x dl (g/cm^2)
+        each integral calculated in angle x from cos-1(D/Ri) to cos-1(D/Ri+1)
+        where Ri is: 
+        EarthRadius+5 km
+        EarthRadius+15 km
+        EarthRadius+atm_sup_limit km
+        """
         distance_from_center = EarthRadius*np.sin(np.radians(180-theta))
         print("D",distance_from_center)
         integral_extrema=[]
         integral_extrema.append(np.arccos(distance_from_center/EarthRadius))
         integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+15)))
-        integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+105)))
+        integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+atm_sup_limit)))
         print("Extremis",integral_extrema)
         final=[]
         for a in range(2):
@@ -187,6 +210,11 @@ def int_length_atm(theta):
 
 
 def sea(h):
+        """
+        to be deleted or implemented in case of a more sofisticated 
+        sea-water density profile
+        By now assumed const = 1.040 g/cm^2
+        """
         ss=[]
         if hasattr(h, "__len__"):
                 for a in h:
@@ -213,14 +241,18 @@ def sea(h):
         
 
 def sea_profile(theta):
+        """
+        product of rho x l
+        with l = h/cos(theta)
+        Should be an integral if sea(h) implemented in a different way
+        """
         h=3.5*10**5
-        return 1.040*h/np.cos(np.radians(theta))
+        return 1.040*h/abs(np.cos(np.radians(theta)))
 
-#print(91)
-#int_lentgth_earth(91)
-#int_lentgth_earth(150)
-#int_length_atm(90.001)
-        
+
+
+
+
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -231,7 +263,7 @@ y_line = fitfuncUND(x_line, a, b)
 x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(x_lineO)
 radius=np.linspace(0,EarthRadius,100)
-hatm=np.linspace(EarthRadius+5,EarthRadius+105,100)
+hatm=np.linspace(EarthRadius+5,EarthRadius+atm_sup_limit,100)
 hsea=np.linspace(EarthRadius*10**5+1,EarthRadius*10**5+4999,100)
 ttheta=np.linspace(0.1,89.9,100)
 stheta=np.linspace(90.01,179.9,100)
@@ -240,34 +272,51 @@ for aa in stheta:
      cc.append(int_lentgth_earth(aa))   
 #print(stheta)
 dd=[]
-for bb in stheta:
+for bb in ttheta:
         dd.append(int_length_atm(bb))
+
+#-------------------------------------------------------------
+# Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
+#-------------------------------------------------------------
 f=plt.figure()
 ax1=f.add_subplot(311)
 df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='red',ax=ax1, logx=True, logy=True)
 ax1.plot(x_line,y_line,'b--')
 ax1.plot(x_lineO,y_lineO,'g--')
+ax1.set_title('nu N CC Cross Section')
 ax2=f.add_subplot(312)
 df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
+ax2.set_title('Mean Bjorken y nu N CC')
 ax3=f.add_subplot(313)
 ax3.plot(x_line,Lint(x_line),'r--')
 ax3.plot(x_lineO,Lint(x_lineO),'r--')
 ax3.set_yscale('log')
 ax3.set_xscale('log')
-ax3.set_ylabel('Lint (mwe)')
+ax3.set_ylabel('Lint (g/cm^2)')
 ax3.set_xlabel('E_nu (GeV)')
+ax3.set_title('Interaction Length')
+f.suptitle('Neutrino property functions')
+#-------------------------------------------------------------
+# Earth: 0) density profile vs radius; 4) slant depth (g/cm^2) vs angle
+#-------------------------------------------------------------
 
 f2=plt.figure()
 ax=f2.add_subplot(121)
 ax.plot(radius, density_profile(radius), 'b-')
 ax.set_ylabel('Density')
 ax.set_xlabel('Earth radius (km)')
+ax.set_title('Earth density profile')
 ax4=f2.add_subplot(122)
 #ax4.plot(stheta,int_lentgth_earth(stheta),'b--')
 ax4.plot(stheta,cc,'b--')
-ax4.set_title('Earth')
+ax4.set_title('slant depth')
 ax4.set_ylabel('x rho (g/cm^2)')
 ax4.set_xlabel('zenith angle (deg)')
+f2.suptitle('Earth')
+#-------------------------------------------------------------
+# Atmosphere: 5) density profile vs height ; 6) slanth depth (g/cm^2) vs angle
+#-------------------------------------------------------------
+
 f3=plt.figure()
 ax5=f3.add_subplot(121)
 ax5.plot(hatm, atmosphere(hatm),'+',markersize=2, color='g')
@@ -276,9 +325,14 @@ ax5.set_xlabel('Atmoosphere height (km)')
 ax5.set_yscale('log')
 ax6=f3.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
-ax6.plot(stheta,dd,'g--')
+ax6.plot(ttheta,dd,'g--')
 ax6.set_ylabel('x rho (g/cm^2)')
 ax6.set_xlabel('zenith angle (deg)')
+f3.suptitle('Atmosphere')
+#-------------------------------------------------------------
+# Sea: 7) density profile vs height (0 = sea bed, 3.5*10**5 sea level for ARCA;
+#      8) slanth depth (g/cm^2) vs angle
+#-------------------------------------------------------------
 
 f4=plt.figure()
 ax7=f4.add_subplot(121)
@@ -288,9 +342,10 @@ ax7.set_xlabel('Sea height (km)')
 ax8=f4.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
 #ax8.plot(ttheta,sea_profile((3.5+EarthRadius)*10**5,ttheta),'g--')
-ax8.plot(ttheta,sea_profile(ttheta),'g--')
+ax8.plot(180-ttheta,sea_profile(180-ttheta),'g--')
 #ax8.plot(stheta,sea_profile(3.5+EarthRadius),'g--')
 ax8.set_ylabel('x rho (g/cm^2)')
 ax8.set_xlabel('zenith angle (deg)')
 ax8.set_yscale('log')
+f4.suptitle('Sea')
 plt.show()
