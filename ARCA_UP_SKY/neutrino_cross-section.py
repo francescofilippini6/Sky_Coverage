@@ -57,28 +57,56 @@ def fitfuncOVE(const,index,x):
                 return ss         
         else:
                 return const*np.power(x,index)
-       
+
 #----------------------------------------------
 # defining the interaction length in mwe
 #-----------------------------------------------
 
+
+def closest_energy_value(x):
+        ss=[]
+        for energy in simulated['Energy (GeV)']:
+                ss.append(abs(energy-x))
+        #minimum=min(ss)
+        min_index = ss.index(min(ss))
+        #print(simulated['Energy (GeV)'][min_index])
+        return (simulated['Total_CS'][min_index],simulated['CrossSCC'][min_index],simulated['CrossNC'][min_index])
+
 Na=6.022*10**23
-def buildingLint(x):
+def buildingLint(x,interaction):
+        cross_interaction=0
         if x <= 1*10**7:
-                return 1/(Na*simulatedncs['Total_CS'])
-        elif x>= 10**6:
-                return 1/(Na*fitfuncOVE(constCC,indexCC,x))
+                if interaction=='NC':
+                        cross_interaction=closest_energy_value(x)[2]
+                elif interaction=='CC':
+                        cross_interaction=closest_energy_value(x)[1]
+                elif interaction=='Total':
+                        cross_interaction=closest_energy_value(x)[0]
+                else:
+                        print("No other known type of interactions")
+                return 1/(Na*cross_interaction)
+
+        elif x > 1* 10**7:
+                if interaction=='NC':
+                        cross_interaction=fitfuncOVE(constNC,indexNC,x)
+                elif interaction=='CC':
+                        cross_interaction=fitfuncOVE(constCC,indexCC,x)
+                elif interaction=='Total':
+                        cross_interaction=fitfuncOVE(constNC,indexNC,x)+fitfuncOVE(constCC,indexCC,x)
+                else:
+                        print("No other known type of interactions")
+                return 1/(Na*cross_interaction)
         else:
-                print("region between 10**12 and 10**16, still problem")
+                print("Energy too high > 10^21 eV or too low < 10 GeV")
                 return 0
-def Lint(x):
+def Lint(x,interaction):
         if hasattr(x, "__len__"):
                 ss=[]
                 for a in x:
-                        ss.append(buildingLint(a))
+                        ss.append(buildingLint(a,interaction))
                 return ss
         else:
-                return buildingLint(x)        
+                return buildingLint(x,interaction)        
 
 
 
@@ -290,15 +318,16 @@ def total_slant(theta):
 # Plotting functions
 #-------------------------------------------------------------
 
-x_line = np.linspace(10**1,10**3, 100)
-y_line = fitfuncUND(x_line, a, b)
-
+#x_line = np.linspace(10**1,10**3, 100)
+#y_line = fitfuncUND(x_line, a, b)
+x_lint = np.linspace(10,10**12, 1000)
 x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
 y_line_total=[]
 for a in range(len(y_lineO)):
         y_line_total.append(y_lineO[a]+y_lineNC[a])
+        
 radius=np.linspace(0,EarthRadius,100)
 hatm=np.linspace(EarthRadius+5,EarthRadius+atm_sup_limit,100)
 hsea=np.linspace(EarthRadius*10**5+1,EarthRadius*10**5+4999,100)
@@ -333,8 +362,10 @@ ax2=f.add_subplot(312)
 df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
 ax2.set_title('Mean Bjorken y nu N CC')
 ax3=f.add_subplot(313)
-ax3.plot(x_line,Lint(x_line),'r--')
-ax3.plot(x_lineO,Lint(x_lineO),'r--')
+#ax3.plot(x_line,Lint(x_line),'r--')
+ax3.plot(x_lint,Lint(x_lint,'CC'),'g--')
+ax3.plot(x_lint,Lint(x_lint,'Total'),'r--')
+ax3.plot(x_lint,Lint(x_lint,'NC'),'b--')
 ax3.set_yscale('log')
 ax3.set_xscale('log')
 ax3.set_ylabel('Lint (g/cm^2)')
