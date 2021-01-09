@@ -27,7 +27,7 @@ for a in range(len(simulatedncs['CrossSCC'])):
 
 df = pd.DataFrame(data=ncs)
 simulated = pd.DataFrame(data=simulatedncs)
-print(simulated)
+#print(simulated)
 
 #-----------------------------------------------
 # Fit of the linear part till 10^12 eV
@@ -37,7 +37,7 @@ def fitfuncUND(x, a, b):
 
 popt, _ = curve_fit(fitfuncUND,df['Energy (GeV)'][:3],df['CrossSectionCC'][:3])
 a,b=popt
-print("LINEAR PARAM. FIT",a,b)
+#print("LINEAR PARAM. FIT",a,b)
 
 #-----------------------------------------------
 #extrapolate the function for 10^16<E<10^21 eV as in article
@@ -176,23 +176,23 @@ def int_lentgth_earth(theta):
         for i = 0 Ri=0
         """
         distance_from_center = EarthRadius*np.sin(np.radians(180-theta))
-        print("D",distance_from_center)
+        #print("D",distance_from_center)
         status=buildingDensity(distance_from_center)[1]
-        print("Numbers of traversed layers",status)
-        print("radia",radia[-status:])
+        #print("Numbers of traversed layers",status)
+        #print("radia",radia[-status:])
         
         integral_extrema=[0]
         for rr in radia[-status:]:
                 integral_extrema.append(np.arccos(distance_from_center/rr))
-        print("Extremis",integral_extrema)
+        #print("Extremis",integral_extrema)
         final=[]
         for a in range(status):
                 integrand = lambda x: 2*buildingDensity(distance_from_center/np.cos(x))[0] * distance_from_center*10**5/(np.cos(x)*np.cos(x))
                 Integral=quad(integrand,integral_extrema[a],integral_extrema[a+1])
                 final.append(Integral[0])
-        print("FINAL value of the integral contributions",final)
+        #print("FINAL value of the integral contributions",final)
         int_length=sum(final)
-        print("sum of contributions:",int_length)
+        #print("sum of contributions:",int_length)
         return(int_length)
 
 atm_sup_limit=455
@@ -235,20 +235,20 @@ def int_length_atm(theta):
         EarthRadius+atm_sup_limit km
         """
         distance_from_center = EarthRadius*np.sin(np.radians(180-theta))
-        print("D",distance_from_center)
+        #print("D",distance_from_center)
         integral_extrema=[]
         integral_extrema.append(np.arccos(distance_from_center/EarthRadius))
         integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+15)))
         integral_extrema.append(np.arccos(distance_from_center/(EarthRadius+atm_sup_limit)))
-        print("Extremis",integral_extrema)
+        #print("Extremis",integral_extrema)
         final=[]
         for a in range(2):
                 integrand = lambda x: atmosphere(distance_from_center/np.cos(x)) * distance_from_center*10**5/(np.cos(x)*np.cos(x))
                 Integral=quad(integrand,integral_extrema[a],integral_extrema[a+1])
                 final.append(Integral[0])
-        print("FINAL values for ATMOSPHERE",final)
+        #print("FINAL values for ATMOSPHERE",final)
         int_length=sum(final)
-        print("ATMOSPHERE sum of contributions:",int_length)
+        #print("ATMOSPHERE sum of contributions:",int_length)
         return(int_length)
 
 
@@ -310,9 +310,17 @@ def total_slant(theta):
                 
 
 
-#def number_of_Lint():
-        
-
+def number_of_Lint(energy,theta):
+        final=np.zeros((len(energy),len(theta)))
+        encounter=0
+        for x in energy:
+                lint=Lint(x,'Total')
+                angcounter=0
+                for ang in theta:
+                        final[encounter][angcounter]=total_slant(ang)/lint
+                        angcounter+=1
+                encounter+=1
+        return final
 
 #-------------------------------------------------------------
 # Plotting functions
@@ -320,7 +328,7 @@ def total_slant(theta):
 
 #x_line = np.linspace(10**1,10**3, 100)
 #y_line = fitfuncUND(x_line, a, b)
-x_lint = np.linspace(10,10**12, 1000)
+x_lint = np.linspace(10,10**12, 100)
 x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
@@ -343,7 +351,8 @@ for bb in stheta:
 
 
 
-zenithy=np.linspace(0,179.9,1000)
+zenithy=np.linspace(0,179.9,100)
+#print(number_of_Lint(x_lint,zenithy))
 #-------------------------------------------------------------
 # Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
 #-------------------------------------------------------------
@@ -436,4 +445,11 @@ ax9.set_ylabel('x rho (g/cm^2)')
 ax9.set_xlabel('zenith angle (deg)')
 ax9.set_yscale('log')
 f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
+
+fig = plt.figure()
+ax10 = fig.add_subplot(111)
+#ax.set_title('colorMap')
+plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='nearest')
+#ax.set_aspect('equal')
+fig.suptitle("distribution")
 plt.show()
