@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import math as m
 import random as ran
 from scipy.optimize import curve_fit
 from scipy.integrate import quad
+from mpl_toolkits.mplot3d import Axes3D
 #-----------------------------------------------
 # dataframe with the cross section points as in
 # "Ultrahigh-Energy Neutrino Interactions" Raj Gandhi
@@ -310,14 +312,29 @@ def total_slant(theta):
                 
 
 
+#def number_of_Lint(energy,theta):
+#        final=np.zeros((len(energy),len(theta)))
+#        encounter=0
+#        for x in energy:
+#                lint=Lint(x,'Total')
+#                angcounter=0
+#                for ang in theta:
+#                        final[encounter][angcounter]=total_slant(ang)/lint
+#                        angcounter+=1
+#                encounter+=1
+#        return final
+#------------------------------------------------------
+#improved performances
+#------------------------------------------------------
 def number_of_Lint(energy,theta):
         final=np.zeros((len(energy),len(theta)))
         encounter=0
-        for x in energy:
-                lint=Lint(x,'Total')
+        lint=Lint(energy,'Total')
+        total=total_slant(theta)
+        for x in lint:
                 angcounter=0
-                for ang in theta:
-                        final[encounter][angcounter]=total_slant(ang)/lint
+                for y in total:
+                        final[encounter][angcounter]=y/x
                         angcounter+=1
                 encounter+=1
         return final
@@ -441,15 +458,25 @@ f4.suptitle('Sea')
 f5=plt.figure()
 ax9=f5.add_subplot(111)
 ax9.plot(zenithy,total_slant(zenithy),'+',markersize=2, color='r')
+#ax9.plot(stheta,cc,'b--')
+#ax9.plot(stheta,dd,'g--')
+#ax9.plot(stheta,sea_profile(stheta),'g--')
 ax9.set_ylabel('x rho (g/cm^2)')
 ax9.set_xlabel('zenith angle (deg)')
 ax9.set_yscale('log')
 f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 
 fig = plt.figure()
-ax10 = fig.add_subplot(111)
-#ax.set_title('colorMap')
-plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='nearest')
-#ax.set_aspect('equal')
-fig.suptitle("distribution")
+ax10 = fig.add_subplot(111, projection='3d')
+ax10.set_title('zenith energy # of Lint')
+X=x_lint
+Y=zenithy
+Z=number_of_Lint(x_lint,zenithy)
+X, Y = np.meshgrid(X, Y)
+surf = ax10.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+ax10.set_xlabel('energy (GeV)')
+ax10.set_ylabel('zenith angle (deg)')
+#plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
+#fig.suptitle("distribution")
+fig.colorbar(surf, shrink=0.5, aspect=5)
 plt.show()
