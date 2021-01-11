@@ -339,6 +339,10 @@ def number_of_Lint(energy,theta):
                 encounter+=1
         return final
 
+
+def Interaction_probability_mean(energy,theta):
+        return 1-np.exp(- number_of_Lint(energy,theta)) 
+        
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -366,10 +370,8 @@ dd=[]
 for bb in stheta:
         dd.append(int_length_atm(bb))
 
-
-
 zenithy=np.linspace(0,179.9,100)
-#print(number_of_Lint(x_lint,zenithy))
+
 #-------------------------------------------------------------
 # Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
 #-------------------------------------------------------------
@@ -467,7 +469,7 @@ ax9.set_yscale('log')
 f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 
 fig = plt.figure()
-ax10 = fig.add_subplot(111, projection='3d')
+ax10 = fig.add_subplot(121, projection='3d')
 ax10.set_title('zenith energy # of Lint')
 X=x_lint
 Y=zenithy
@@ -476,7 +478,13 @@ X, Y = np.meshgrid(X, Y)
 surf = ax10.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 ax10.set_xlabel('energy (GeV)')
 ax10.set_ylabel('zenith angle (deg)')
+#ax10.colorbar(surf, shrink=0.5, aspect=5)
+ax11 = fig.add_subplot(122, projection='3d')
+Z=Interaction_probability_mean(x_lint,zenithy)
+ax11.set_xlabel('energy (GeV)')
+ax11.set_ylabel('zenith angle (deg)')
+surf1=ax11.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
 #fig.suptitle("distribution")
-fig.colorbar(surf, shrink=0.5, aspect=5)
+fig.colorbar(surf1, shrink=0.5, aspect=5)
 plt.show()
