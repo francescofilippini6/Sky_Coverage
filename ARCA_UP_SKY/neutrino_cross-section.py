@@ -24,6 +24,7 @@ simulatedncs={
         'Total_CS':[]
 
 }
+
 for a in range(len(simulatedncs['CrossSCC'])):
         simulatedncs['Total_CS'].append(simulatedncs['CrossSCC'][a]+simulatedncs['CrossNC'][a])
 
@@ -41,6 +42,11 @@ popt, _ = curve_fit(fitfuncUND,df['Energy (GeV)'][:3],df['CrossSectionCC'][:3])
 a,b=popt
 #print("LINEAR PARAM. FIT",a,b)
 
+#def fitBjorken(x, a, b, c, d, e, f, g):
+#	return a * x + b
+
+#fittedBjorken=np.polyfit(df['Energy (GeV)'],df['minelasticityCC'],10)
+#funcY=np.poly1d(fittedBjorken)
 #-----------------------------------------------
 #extrapolate the function for 10^16<E<10^21 eV as in article
 #-----------------------------------------------
@@ -339,10 +345,15 @@ def number_of_Lint(energy,theta):
                 encounter+=1
         return final
 
-
+#------------------------------------------------------
+#neutrino survival probability
+#------------------------------------------------------
 def Interaction_probability_mean(energy,theta):
-        return 1-np.exp(- number_of_Lint(energy,theta)) 
+        return np.exp(- number_of_Lint(energy,theta)) 
         
+#def muon_range(energy):
+        
+
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -350,6 +361,7 @@ def Interaction_probability_mean(energy,theta):
 #x_line = np.linspace(10**1,10**3, 100)
 #y_line = fitfuncUND(x_line, a, b)
 x_lint = np.linspace(10,10**12, 100)
+x_energy = np.linspace(10,10**8, 100)
 x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
@@ -388,6 +400,7 @@ ax1.plot(x_lineO,y_line_total,'r--')
 ax1.set_title('nu N CC Cross Section')
 ax2=f.add_subplot(312)
 df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
+#ax2.plot(x_lint,funcY(x_lint),'r--')
 ax2.set_title('Mean Bjorken y nu N CC')
 ax3=f.add_subplot(313)
 #ax3.plot(x_line,Lint(x_line),'r--')
@@ -471,16 +484,16 @@ f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 fig = plt.figure()
 ax10 = fig.add_subplot(121, projection='3d')
 ax10.set_title('zenith energy # of Lint')
-X=x_lint
+X=x_energy
 Y=zenithy
-Z=number_of_Lint(x_lint,zenithy)
+Z=number_of_Lint(x_energy,zenithy)
 X, Y = np.meshgrid(X, Y)
 surf = ax10.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 ax10.set_xlabel('energy (GeV)')
 ax10.set_ylabel('zenith angle (deg)')
 #ax10.colorbar(surf, shrink=0.5, aspect=5)
 ax11 = fig.add_subplot(122, projection='3d')
-Z=Interaction_probability_mean(x_lint,zenithy)
+Z=Interaction_probability_mean(x_energy,zenithy)
 ax11.set_xlabel('energy (GeV)')
 ax11.set_ylabel('zenith angle (deg)')
 surf1=ax11.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
