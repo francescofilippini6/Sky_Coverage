@@ -31,17 +31,38 @@ for a in range(len(simulatedncs['CrossSCC'])):
 df = pd.DataFrame(data=ncs)
 simulated = pd.DataFrame(data=simulatedncs)
 #print(simulated)
-
+#print(ncs['Energy (GeV)'][1])
 #-----------------------------------------------
 # Fit of the linear part till 10^12 eV
 #-----------------------------------------------
 def fitfuncUND(x, a, b):
 	return a * x + b
 
-popt, _ = curve_fit(fitfuncUND,df['Energy (GeV)'][:3],df['CrossSectionCC'][:3])
-a,b=popt
-#print("LINEAR PARAM. FIT",a,b)
+#popt, _ = curve_fit(fitfuncUND,df['Energy (GeV)'][:3],df['CrossSectionCC'][:3])
+#a,b=popt
 
+allm=[]
+allq=[]
+for ele in range(len(ncs['minelasticityCC'])-1):
+        params, _ =curve_fit(fitfuncUND,ncs['Energy (GeV)'][ele:ele+2],ncs['minelasticityCC'][ele:ele+2])
+        allmb,allqb=params
+        allm.append(allmb)
+        allq.append(allqb)
+#print("allm",allm)
+#print("allq",allq)
+
+def Bjorken(x):
+        ss=[]
+        if hasattr(x, "__len__"):
+                for b in x:
+                        for a in range(len(ncs['minelasticityCC'])-1):
+                                if b>=ncs['Energy (GeV)'][a] and b<ncs['Energy (GeV)'][a+1]:
+                                        ss.append(fitfuncUND(b,allm[a], allq[a]))
+                return ss
+        else:
+                for a in range(len(ncs['minelasticityCC'])-1):
+                        if x>=ncs['Energy (GeV)'][a] and x<ncs['Energy (GeV)'][a+1]:
+                                        return fitfuncUND(x,allm[a], allq[a])
 #def fitBjorken(x, a, b, c, d, e, f, g):
 #	return a * x + b
 
@@ -107,6 +128,7 @@ def buildingLint(x,interaction):
         else:
                 print("Energy too high > 10^21 eV or too low < 10 GeV")
                 return 0
+
 def Lint(x,interaction):
         if hasattr(x, "__len__"):
                 ss=[]
@@ -337,6 +359,7 @@ def number_of_Lint(energy,theta):
         encounter=0
         lint=Lint(energy,'Total')
         total=total_slant(theta)
+        #if i=="Lint":
         for x in lint:
                 angcounter=0
                 for y in total:
@@ -344,25 +367,66 @@ def number_of_Lint(energy,theta):
                         angcounter+=1
                 encounter+=1
         return final
-
 #------------------------------------------------------
-#neutrino survival probability
+# neutrino survival probability
 #------------------------------------------------------
 def Interaction_probability_mean(energy,theta):
         return np.exp(- number_of_Lint(energy,theta)) 
         
-#def muon_range(energy):
-        
+def muon_range(energy):
+        alpha=0.274   #GeV/m
+        beta=3.49*10**-4  #1/m
+        Ec=alpha/beta
+        ss=[]
+        rho=1 #g/cm^3 
+        if hasattr(energy, "__len__"):
+                for x in energy:
+                        E_muon=x*(1-Bjorken(x))
+                        if E_muon<Ec:
+                                ss.append(E_muon*rho/alpha*10**2)   #g/cm^2
+                        else:
+                                ss.append(rho/beta*m.log(1+beta*E_muon/alpha)*10**2)  #g/cm^2
+                return ss
+        else:
+                E_muon=energy*(1-Bjorken(energy))
+                if E_muon<Ec:
+                        return E_muon*rho/alpha*10**2
+                else:
+                        return rho/beta* m.log(1+beta*E_muon/alpha) *10**2
 
+lambda_ass=60*10**2   #cm  
+def radius_can(energy):
+        radius=[]
+        if hasattr(energy, "__len__"):
+                for a in energy:
+                        radius.append(muon_range(a)+np.cos(np.radians(42))*lambda_ass)
+                return radius
+        else:
+                return muon_range(energy)+np.cos(np.radians(42))*lambda_ass
+ 
+
+
+def nu_survival_can_level(energy,theta):
+        #fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
+        index=abs(number_of_Lint(energy,theta)-radius_can(energy)*np.power(Lint(energy,'Total'),-1))
+        return np.exp(-index)
+
+def nu_interaction_inside_can(energy):
+        fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
+        #return 1-np.exp(-fraction)
+        return fraction
+        #return 1
+def final_prbability(energy,theta):
+        return nu_survival_can_level(energy,theta)* nu_interaction_inside_can(energy)
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
 
 #x_line = np.linspace(10**1,10**3, 100)
 #y_line = fitfuncUND(x_line, a, b)
-x_lint = np.linspace(10,10**12, 100)
-x_energy = np.linspace(10,10**8, 100)
-x_lineO = np.linspace(10**6,10**12, 100)
+x_lint = np.logspace(1,11, 100)#np.linspace(10,0.99*10**12, 100000)
+x_energy = np.logspace(1,11, 100)#x_energy = np.linspace(10,10**8, 100)
+x_lineO = np.logspace(6,12, 100)#x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
 y_line_total=[]
@@ -394,19 +458,19 @@ simulated.plot(kind='scatter',x='Energy (GeV)',y='Total_CS',color='red',ax=ax1, 
 simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossSCC',color='green',ax=ax1, logx=True, logy=True)
 simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossNC',color='blue',ax=ax1, logx=True, logy=True)
 #ax1.plot(x_line,y_line,'b--')
-ax1.plot(x_lineO,y_lineO,'g--')
-ax1.plot(x_lineO,y_lineNC,'b--')
-ax1.plot(x_lineO,y_line_total,'r--')
+ax1.plot(x_lineO,y_lineO,'+',markersize=2, color='g')#'g--')
+ax1.plot(x_lineO,y_lineNC,'+',markersize=2, color='b')#'b--')
+ax1.plot(x_lineO,y_line_total,'+',markersize=2, color='r')
 ax1.set_title('nu N CC Cross Section')
 ax2=f.add_subplot(312)
 df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
-#ax2.plot(x_lint,funcY(x_lint),'r--')
+ax2.plot(x_lint,Bjorken(x_lint),'+',markersize=2, color='r')
 ax2.set_title('Mean Bjorken y nu N CC')
 ax3=f.add_subplot(313)
 #ax3.plot(x_line,Lint(x_line),'r--')
-ax3.plot(x_lint,Lint(x_lint,'CC'),'g--')
-ax3.plot(x_lint,Lint(x_lint,'Total'),'r--')
-ax3.plot(x_lint,Lint(x_lint,'NC'),'b--')
+ax3.plot(x_lint,Lint(x_lint,'CC'),'+',markersize=2, color='g')#'g--')
+ax3.plot(x_lint,Lint(x_lint,'Total'),'+',markersize=2, color='r')#'r--')
+ax3.plot(x_lint,Lint(x_lint,'NC'),'+',markersize=2, color='b')#'b--')
 ax3.set_yscale('log')
 ax3.set_xscale('log')
 ax3.set_ylabel('Lint (g/cm^2)')
@@ -419,13 +483,13 @@ f.suptitle('Neutrino property functions')
 
 f2=plt.figure()
 ax=f2.add_subplot(121)
-ax.plot(radius, density_profile(radius), 'b-')
+ax.plot(radius, density_profile(radius),'b-')
 ax.set_ylabel('Density')
 ax.set_xlabel('Earth radius (km)')
 ax.set_title('Earth density profile')
 ax4=f2.add_subplot(122)
 #ax4.plot(stheta,int_lentgth_earth(stheta),'b--')
-ax4.plot(stheta,cc,'b--')
+ax4.plot(stheta,cc,'+',markersize=2, color='b')
 ax4.set_title('slant depth')
 ax4.set_ylabel('x rho (g/cm^2)')
 ax4.set_xlabel('zenith angle (deg)')
@@ -442,7 +506,7 @@ ax5.set_xlabel('Atmoosphere height (km)')
 ax5.set_yscale('log')
 ax6=f3.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
-ax6.plot(stheta,dd,'g--')
+ax6.plot(stheta,dd,'+',markersize=2, color='b')#'g--')
 ax6.set_ylabel('x rho (g/cm^2)')
 ax6.set_xlabel('zenith angle (deg)')
 ax6.set_yscale('log')
@@ -500,4 +564,24 @@ surf1=ax11.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
 #fig.suptitle("distribution")
 fig.colorbar(surf1, shrink=0.5, aspect=5)
+
+
+figmuon = plt.figure()
+axmuon = figmuon.add_subplot(121)
+axmuon.set_title('muon range')
+axmuon.plot(x_energy,muon_range(x_energy),'+',markersize=2, color='r')
+axmuon.set_xlabel('energy (GeV)')
+axmuon.set_ylabel('Range (g/cm^2)')
+axmuon.set_xscale('log')
+ax12 = figmuon.add_subplot(122, projection='3d')
+#Z=nu_survival_can_level(x_energy,zenithy)
+Z=final_prbability(x_energy,zenithy)
+#print(Z)
+ax12.set_xlabel('energy (GeV)')
+ax12.set_ylabel('zenith angle (deg)')
+surf2=ax12.plot_surface(X, Y, Z, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
+#fig.suptitle("distribution")
+figmuon.colorbar(surf2, shrink=0.5, aspect=5)
+
 plt.show()
