@@ -425,15 +425,20 @@ def nu_survival_can_level(energy,theta):
                 return np.exp(-index)
 
 def nu_interaction_inside_can(energy,theta):
-        sd=total_slant(theta)
-        rmu=muon_range(energy)
-        interact_probability
-        for a in range(len(total_slant(theta))):
-                if sd[a]<=rmu[a]:
-                        1-Interaction_probability_mean(energy,theta)
-        else:
-                fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
-                return np.ones(len(energy))-np.exp(-fraction)
+         if total_slant(theta)<=muon_range(energy):
+                  return 1-Interaction_probability_mean(energy,theta)
+         else:
+                 fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
+                 return np.ones(len(energy))-np.exp(-fraction)
+        #sd=total_slant(theta)
+        #rmu=muon_range(energy)
+        #interact_probability
+        #for a in range(len(total_slant(theta))):
+        #        if sd[a]<=rmu[a]:
+        #                1-Interaction_probability_mean(energy,theta)
+        #else:
+        #        fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
+        #        return np.ones(len(energy))-np.exp(-fraction)
        
 def final_prbability(energy,theta):
         return nu_survival_can_level(energy,theta)*nu_interaction_inside_can(energy,theta)
