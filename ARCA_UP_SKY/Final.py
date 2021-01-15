@@ -466,8 +466,9 @@ def radius_can(energy):
 
 
 def nu_survival_can_level(energy,theta):
-        Lint,status=number_of_Lint(energy,theta)
-        print("LINT",Lint)
+        numb_Lint,status=number_of_Lint(energy,theta)
+        lint=Lint(energy,'Total')
+        #print("LINT",Lint)
         print("status",status)
         if status==1:
                 probability=np.zeros((len(energy),len(theta)))
@@ -481,8 +482,8 @@ def nu_survival_can_level(energy,theta):
                                         #print("ZIO CAN!!!!")
                                         probability[ene][ang]=1
                                 else:
-                                        #print("Lint",Lint[ene][ang],Rmu[ene],np.power(Lint[ene][ang],-1))
-                                        index=Lint[ene][ang]-Rmu[ene]*(Lint[ene][ang]**-1)
+                                        #print("numb_Lint",numb_Lint[ene][ang],Rmu[ene],np.power(numb_Lint[ene][ang],-1))
+                                        index=numb_Lint[ene][ang]-Rmu[ene]*np.power(lint[ene],-1)
                                         #print("index",index)
                                         probability[ene][ang]=np.exp(-index)
                 return probability
@@ -494,7 +495,7 @@ def nu_survival_can_level(energy,theta):
                         if slant<=Rmu[ene]:
                                 probability.append(1)
                         else:
-                                index=Lint[ene]-Rmu[ene]*np.power(Lint[ene],-1)
+                                index=numb_Lint[ene]-Rmu[ene]*np.power(lint[ene],-1)
                                 probability.append(np.exp(-index))
                 return probability
         elif status==3:
@@ -505,7 +506,7 @@ def nu_survival_can_level(energy,theta):
                         if slant[ang]<=Rmu:
                                 probability.append(1)
                         else:
-                                index=Lint[ang]-Rmu*np.power(Lint[ang]-1)
+                                index=numb_Lint[ang]-Rmu*np.power(lint,-1)
                                 probability.append(np.exp(-index))
                 return probability
         
@@ -515,28 +516,86 @@ def nu_survival_can_level(energy,theta):
                 if slant<=Rmu:
                         probability.append(1)
                 else:
-                        index=Lint-Rmu*np.power(Lint,-1)
+                        index=numb_Lint-Rmu*np.power(lint,-1)
                         probability.append(np.exp(-index))
                 return probability
 
 def nu_interaction_inside_can(energy,theta):
-         if total_slant(theta)<=muon_range(energy):
-                  return 1-Survival_probability_mean(energy,theta)
-         else:
-                 fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
-                 return np.ones(len(energy))-np.exp(-fraction)
-        #sd=total_slant(theta)
-        #rmu=muon_range(energy)
-        #interact_probability
-        #for a in range(len(total_slant(theta))):
-        #        if sd[a]<=rmu[a]:
-        #                1-Interaction_probability_mean(energy,theta)
-        #else:
-        #        fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
-        #        return np.ones(len(energy))-np.exp(-fraction)
+        numb_Lint,status=number_of_Lint(energy,theta)
+        lint=Lint(energy,'Total')  #possibility to set the CC interaction..
+        surv=Survival_probability_mean(energy,theta)
+        #print("LINT",Lint)
+        print("status",status)
+        if status==1:
+                probability=np.zeros((len(energy),len(theta)))
+                Rmu=radius_can(energy)
+                print("Radius can",Rmu)
+                slant=total_slant(theta)
+                print("slant",slant,theta)
+                for ene in range(len(Rmu)):
+                        for ang in range(len(theta)):
+                                if slant[ang]<=Rmu[ene]:
+                                        probability[ene][ang]=1-surv[ene][ang]
+                                else:
+                                        index=Rmu[ene]*np.power(lint[ene],-1)
+                                        probability[ene][ang]=1-np.exp(-index)
+                return probability
+       
+        elif status==2:
+                probability=[]
+                Rmu=radius_can(energy)
+                slant=total_slant(theta)
+                for ene in energy:
+                        if slant<=Rmu[ene]:
+                                probability.append(1-surv[ene])
+                        else:
+                                index=Rmu[ene]*np.power(lint[ene],-1)
+                                probability.append(1-np.exp(-index))
+                return probability
+
+        elif status==3:
+                probability=[]
+                Rmu=radius_can(energy)
+                slant=total_slant(theta)
+                for ang in theta:
+                        if slant[ang]<=Rmu:
+                                probability.append(1-surv[ang])
+                        else:
+                                index=Rmu*np.power(lint,-1)
+                                probability.append(1-np.exp(-index))
+                return probability
+        
+        elif status==4:
+                Rmu=radius_can(energy)
+                slant=total_slant(theta)
+                if slant<=Rmu:
+                        probability.append(1-surv)
+                else:
+                        index=Rmu*np.power(lint,-1)
+                        probability.append(1-np.exp(-index))
+                return probability
+
+        #-------------------------------------------------------------
+
+        
+        #if total_slant(theta)<=muon_range(energy):
+        #          return 1-Survival_probability_mean(energy,theta)
+        # else:
+        #         fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
+        #         return np.ones(len(energy))-np.exp(-fraction)
        
 def final_prbability(energy,theta):
-        return nu_survival_can_level(energy,theta)*nu_interaction_inside_can(energy,theta)
+        numb_Lint,status=number_of_Lint(energy,theta)
+        interaction=nu_interaction_inside_can(energy,theta)
+        survival=nu_survival_can_level(energy,theta)
+        if status==1:
+                probability=np.zeros((len(energy),len(theta)))
+                for ene in range(len(energy)):
+                        for ang in range(len(theta)):
+                                probability[ene][ang]=survival[ene][ang]*interaction[ene][ang]
+                return probability
+                
+        #return nu_survival_can_level(energy,theta)*nu_interaction_inside_can(energy,theta)
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -544,7 +603,7 @@ def final_prbability(energy,theta):
 #x_line = np.linspace(10**1,10**3, 100)
 #y_line = fitfuncUND(x_line, a, b)
 x_lint = np.logspace(1,11, 100)#np.linspace(10,0.99*10**12, 100000)
-x_energy = np.logspace(1,5, 100)#x_energy = np.linspace(10,10**8, 100)
+x_energy = np.logspace(1,11, 100)#x_energy = np.linspace(10,10**8, 100)
 x_lineO = np.logspace(6,12, 100)#x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
@@ -701,9 +760,11 @@ axmuon.set_xscale('log')
 ax12 = figmuon.add_subplot(122, projection='3d')
 X2=x_energy
 Y2=zenithy
-Z3=nu_survival_can_level(X2,Y2)
+#Z3=nu_survival_can_level(X2,Y2)
+#Z3=nu_interaction_inside_can(X2,Y2)
+Z3=final_prbability(X2,Y2)
 X2, Y2 = np.meshgrid(X2, Y2)
-#ZMu=final_prbability(x_energy,zenithy)
+
 ax12.set_xlabel('energy (GeV)')
 ax12.set_ylabel('zenith angle (deg)')
 surf2=ax12.plot_surface(X2, Y2, Z3, cmap=cm.coolwarm,linewidth=0, antialiased=False)
