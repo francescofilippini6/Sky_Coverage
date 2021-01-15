@@ -378,57 +378,39 @@ def number_of_Lint(energy,theta):
                                 angcounter+=1
                         encounter+=1
                 status=1
-                print(final)
                 return final,status
         elif hasattr(energy, "__len__") and np.isscalar(theta):
                 final=np.zeros(len(energy))
+                status=2
+                print("STATO",status)
                 encounter=0
                 lint=Lint(energy,'Total')
                 total=total_slant(theta)
                 for x in lint:
                         final[encounter]=total/x
                         encounter+=1
-                status=2
                 return final,status
         elif hasattr(theta, "__len__") and np.isscalar(energy):
                 final=np.zeros(len(theta))
+                status=3
+                print("STATO",status)
                 angcounter=0
                 lint=Lint(energy,'Total')
                 total=total_slant(theta)
                 for y in total:
                         final[angcounter]=y/lint
                         angcounter+=1
-                status=3
                 return final,status
         
         else:
                 status=4
+                print("STATO",status)
                 return total_slant(theta)/Lint(energy,'Total'),status
 #------------------------------------------------------
 # neutrino survival probability
 #------------------------------------------------------
 def Survival_probability_mean(energy,theta):
         Lint,status=number_of_Lint(energy,theta)
-        #prob_list=[]
-        #if status==1:
-        #        print("status = 1")
-        #        return np.exp(-Lint)
-                #for ene in energy:
-                #        for ang in theta:
-                #                prob_list.append(np.exp(-Lint[ene][ang]))
-        #elif status==2:
-        #        print("status = 2")
-        #        return np.exp(-Lint)
-                #for ene in energy:
-                #        prob_list.append(np.exp(-Lint[ene]))
-        #elif staus==3:
-        #        print("status = 3")
-        #        for ang in theta:
-        #                prob_list.append(np.exp(-Lint[ang]))
-        #elif status==4:
-        #        print("status = 4")
-        #        return np.exp(-Lint)
-        #return prob_list
         return np.exp(-Lint)
 
 def muon_range(energy):
@@ -473,25 +455,22 @@ def nu_survival_can_level(energy,theta):
         if status==1:
                 probability=np.zeros((len(energy),len(theta)))
                 Rmu=radius_can(energy)
-                print("Radius can",Rmu)
+                #print("Radius can",Rmu)
                 slant=total_slant(theta)
-                print("slant",slant,theta)
+                print("slant",len(slant),len(theta))
                 for ene in range(len(Rmu)):
                         for ang in range(len(theta)):
                                 if slant[ang]<=Rmu[ene]:
-                                        #print("ZIO CAN!!!!")
                                         probability[ene][ang]=1
                                 else:
-                                        #print("numb_Lint",numb_Lint[ene][ang],Rmu[ene],np.power(numb_Lint[ene][ang],-1))
                                         index=numb_Lint[ene][ang]-Rmu[ene]*np.power(lint[ene],-1)
-                                        #print("index",index)
                                         probability[ene][ang]=np.exp(-index)
                 return probability
         elif status==2:
                 probability=[]
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
-                for ene in energy:
+                for ene in range(len(energy)):
                         if slant<=Rmu[ene]:
                                 probability.append(1)
                         else:
@@ -502,7 +481,7 @@ def nu_survival_can_level(energy,theta):
                 probability=[]
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
-                for ang in theta:
+                for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
                                 probability.append(1)
                         else:
@@ -524,14 +503,13 @@ def nu_interaction_inside_can(energy,theta):
         numb_Lint,status=number_of_Lint(energy,theta)
         lint=Lint(energy,'Total')  #possibility to set the CC interaction..
         surv=Survival_probability_mean(energy,theta)
-        #print("LINT",Lint)
         print("status",status)
         if status==1:
                 probability=np.zeros((len(energy),len(theta)))
                 Rmu=radius_can(energy)
-                print("Radius can",Rmu)
+                #print("Radius can",Rmu)
                 slant=total_slant(theta)
-                print("slant",slant,theta)
+                #print("slant",slant,theta)
                 for ene in range(len(Rmu)):
                         for ang in range(len(theta)):
                                 if slant[ang]<=Rmu[ene]:
@@ -545,7 +523,7 @@ def nu_interaction_inside_can(energy,theta):
                 probability=[]
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
-                for ene in energy:
+                for ene in range(len(energy)):
                         if slant<=Rmu[ene]:
                                 probability.append(1-surv[ene])
                         else:
@@ -557,7 +535,7 @@ def nu_interaction_inside_can(energy,theta):
                 probability=[]
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
-                for ang in theta:
+                for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
                                 probability.append(1-surv[ang])
                         else:
@@ -594,16 +572,26 @@ def final_prbability(energy,theta):
                         for ang in range(len(theta)):
                                 probability[ene][ang]=survival[ene][ang]*interaction[ene][ang]
                 return probability
-                
-        #return nu_survival_can_level(energy,theta)*nu_interaction_inside_can(energy,theta)
+
+        elif status==2:
+                probability=[]
+                for ene in range(len(energy)):
+                        probability.append(survival[ene]*interaction[ene])
+                return probability
+
+        elif status==3:
+                probability=[]
+                for ang in range(len(theta)):
+                        probability.append(survival[ang]*interaction[ang])
+                return probability
+        elif status==4:
+                return survival*interaction
+        
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
 
-#x_line = np.linspace(10**1,10**3, 100)
-#y_line = fitfuncUND(x_line, a, b)
 x_lint = np.logspace(1,11, 100)#np.linspace(10,0.99*10**12, 100000)
-x_energy = np.logspace(1,11, 100)#x_energy = np.linspace(10,10**8, 100)
 x_lineO = np.logspace(6,12, 100)#x_lineO = np.linspace(10**6,10**12, 100)
 y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
 y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
@@ -626,7 +614,14 @@ dd=[]
 for bb in stheta:
         dd.append(int_length_atm(bb))
 
-zenithy=np.linspace(0,179.9,100)
+#-------------------------------------------------------------
+#surface plot number generators
+#-------------------------------------------------------------
+Number_of_points=150
+#x_energy = np.linspace(10,10**11, Number_of_points)
+x_energy = np.logspace(1,7, Number_of_points)
+zenithy=np.linspace(0,179.9,Number_of_points)
+#zenithy=np.logspace(0,2,Number_of_points)
 
 #-------------------------------------------------------------
 # Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
@@ -727,8 +722,11 @@ f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 
 
 
-
-
+#-------------------------------------------------------------
+# SURFACE PLOTS:
+#   10) Number on Lint; 11) survival probability; 12) survival at can level
+#   13) Interaction inside can;  14) 12*13= final probability
+#-------------------------------------------------------------
 fig = plt.figure()
 ax10 = fig.add_subplot(121, projection='3d')
 ax10.set_title('zenith energy # of Lint')
@@ -749,30 +747,54 @@ surf1=ax11.plot_surface(X1, Y1, Z2, cmap=cm.coolwarm,linewidth=0, antialiased=Fa
 #fig.suptitle("distribution")
 fig.colorbar(surf1, shrink=0.5, aspect=5)
 
-
-figmuon = plt.figure()
-axmuon = figmuon.add_subplot(121)
+figg= plt.figure()
+axmuon = figg.add_subplot(111)
 axmuon.set_title('muon range')
 axmuon.plot(x_energy,muon_range(x_energy),'+',markersize=2, color='r')
+axmuon.plot(x_energy,radius_can(x_energy),'+',markersize=2, color='g')
 axmuon.set_xlabel('energy (GeV)')
 axmuon.set_ylabel('Range (g/cm^2)')
 axmuon.set_xscale('log')
-ax12 = figmuon.add_subplot(122, projection='3d')
+
+
+figmuon = plt.figure()
+ax12 = figmuon.add_subplot(231, projection='3d')
 X2=x_energy
 Y2=zenithy
-#Z3=nu_survival_can_level(X2,Y2)
-#Z3=nu_interaction_inside_can(X2,Y2)
-Z3=final_prbability(X2,Y2)
+Z3=nu_survival_can_level(X2,Y2)
+Z4=nu_interaction_inside_can(X2,Y2)
+Z5=final_prbability(X2,Y2)
 X2, Y2 = np.meshgrid(X2, Y2)
-
 ax12.set_xlabel('energy (GeV)')
 ax12.set_ylabel('zenith angle (deg)')
+ax12.set_title("survival at can level")
 surf2=ax12.plot_surface(X2, Y2, Z3, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-#ax12.scatter(x_energy, zenithy, Z)
 
+
+ax13 = figmuon.add_subplot(232, projection='3d')
+ax13.set_xlabel('energy (GeV)')
+ax13.set_ylabel('zenith angle (deg)')
+surf3=ax13.plot_surface(X2, Y2, Z4, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+ax13.set_title("Interaction inside can")
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
-#fig.suptitle("distribution")
+#fig.suptitle("distribution"
+ax14 = figmuon.add_subplot(233, projection='3d')
+ax14.set_xlabel('energy (GeV)')
+ax14.set_ylabel('zenith angle (deg)')
+ax14.set_title("Final Probability")
+surf2=ax14.plot_surface(X2, Y2, Z5, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 
+
+#print("_---------------______________------___DEBUG_______------_______---_--_-__-_-_-_--_-__")
+E_fixed=10**4
+ax15 = figmuon.add_subplot(234)
+ax15.plot(zenithy,nu_survival_can_level(E_fixed,zenithy),'+',markersize=2)
+
+ax16 = figmuon.add_subplot(235)
+ax16.plot(zenithy,nu_interaction_inside_can(E_fixed,zenithy),'+',markersize=2)
+
+ax17 = figmuon.add_subplot(236)
+ax17.plot(zenithy,final_prbability(E_fixed,zenithy),'+',markersize=2)
 #figmuon.colorbar(surf2, shrink=0.5, aspect=5)
 #ax13 = figmuon.add_subplot(133)
 #ax13.plot(zenithy,final_prbability(x_energy,zenithy)[-1],'+',markersize=2, color='r')
