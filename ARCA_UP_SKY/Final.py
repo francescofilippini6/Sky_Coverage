@@ -483,6 +483,7 @@ def nu_survival_can_level(energy,theta):
                 slant=total_slant(theta)
                 for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
+                                print(theta[ang])
                                 probability.append(1)
                         else:
                                 index=numb_Lint[ang]-Rmu*np.power(lint,-1)
@@ -538,6 +539,7 @@ def nu_interaction_inside_can(energy,theta):
                 for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
                                 probability.append(1-surv[ang])
+                                print(theta[ang])
                         else:
                                 index=Rmu*np.power(lint,-1)
                                 probability.append(1-np.exp(-index))
@@ -587,6 +589,46 @@ def final_prbability(energy,theta):
         elif status==4:
                 return survival*interaction
         
+year=3.15*10**7 #seconds
+A_geom=1*10**10 #cm^2
+def nu_flux(energy):
+        ss=[]
+        if hasattr(energy, "__len__"):
+                for ene  in energy:
+                        ss.append(10**-11*ene**-2)
+                        #ss.append(1)
+                return ss
+        else:
+                return 10**-11*energy**-2
+                #return 1
+        
+def Numb_events(energy,theta):
+        numb_Lint,status=number_of_Lint(energy,theta)
+        factor=year*A_geom*2*np.pi
+        proba=final_prbability(energy,theta)
+        flux=nu_flux(energy)
+        if status==1:
+                events=np.zeros((len(energy),len(theta)))
+                for ene in range(len(energy)):
+                        for ang in range(len(theta)):
+                                events[ene][ang]=proba[ene][ang]*flux[ene]*factor#*np.sin(theta[ang])
+                return events
+        elif status==2:
+                events=[]
+                for ene in range(len(energy)):
+                        events.append(proba[ene]*flux[ene]*factor*np.sin(theta))
+                return events
+        
+        elif status==3:
+                events=[]
+                for ang in range(len(theta)):
+                        events.append(proba[ang]*flux*factor)#*np.sin(theta[ang]))
+                return events
+        elif status==4:
+                return proba*flux*factor*np.sin(theta)
+
+
+                
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -794,6 +836,7 @@ ax16 = figmuon.add_subplot(235)
 ax16.plot(zenithy,nu_interaction_inside_can(E_fixed,zenithy),'+',markersize=2)
 
 ax17 = figmuon.add_subplot(236)
+#ax17.plot(zenithy,Numb_events(E_fixed,zenithy),'+',markersize=2)
 ax17.plot(zenithy,final_prbability(E_fixed,zenithy),'+',markersize=2)
 #figmuon.colorbar(surf2, shrink=0.5, aspect=5)
 #ax13 = figmuon.add_subplot(133)
