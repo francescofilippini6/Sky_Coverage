@@ -7,6 +7,7 @@ import random as ran
 from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from mpl_toolkits.mplot3d import Axes3D
+from decimal import Decimal
 #-----------------------------------------------
 # dataframe with the cross section points as in
 # "Ultrahigh-Energy Neutrino Interactions" Raj Gandhi
@@ -62,7 +63,8 @@ def Bjorken(x):
         else:
                 for a in range(len(ncs['minelasticityCC'])-1):
                         if x>=ncs['Energy (GeV)'][a] and x<ncs['Energy (GeV)'][a+1]:
-                                        return fitfuncUND(x,allm[a], allq[a])
+                                print(fitfuncUND(x,allm[a], allq[a]))
+                                return fitfuncUND(x,allm[a], allq[a])
 #def fitBjorken(x, a, b, c, d, e, f, g):
 #	return a * x + b
 
@@ -555,10 +557,10 @@ def nu_interaction_inside_can(energy,theta):
                         probability.append(1-np.exp(-index))
                 return probability
 
-        #-------------------------------------------------------------
+#-------------------------------------------------------------
 
         
-        #if total_slant(theta)<=muon_range(energy):
+#if total_slant(theta)<=muon_range(energy):
         #          return 1-Survival_probability_mean(energy,theta)
         # else:
         #         fraction=radius_can(energy)*np.power(Lint(energy,'Total'),-1)
@@ -591,15 +593,31 @@ def final_prbability(energy,theta):
         
 year=3.15*10**7 #seconds
 A_geom=1*10**10 #cm^2
+
+def A_eff(energy,theta):
+        over=[]
+        under=[]
+        for ang in theta:
+                if ang >90:
+                        under.append(ang)
+                else:
+                        over.append(ang)
+        AeffOver=[]
+        AeffUnder=[]
+        for ene in energy:
+                AeffOver.append(A_geom*final_prbability(ene,over))
+                AeffUnder.append(A_geom*final_prbability(ene,under))
+        return AeffOver,AeffUnder
+                
 def nu_flux(energy):
         ss=[]
         if hasattr(energy, "__len__"):
                 for ene  in energy:
-                        ss.append(10**-11*ene**-2)
+                        ss.append(10**-8*ene**-2)
                         #ss.append(1)
                 return ss
         else:
-                return 10**-11*energy**-2
+                return 10**-8*energy**-2
                 #return 1
         
 def Numb_events(energy,theta):
@@ -616,7 +634,7 @@ def Numb_events(energy,theta):
         elif status==2:
                 events=[]
                 for ene in range(len(energy)):
-                        events.append(proba[ene]*flux[ene]*factor*np.sin(theta))
+                        events.append(proba[ene]*flux[ene]*factor)#*np.sin(theta))
                 return events
         
         elif status==3:
@@ -628,7 +646,15 @@ def Numb_events(energy,theta):
                 return proba*flux*factor*np.sin(theta)
 
 
-                
+def sum_of_events(energy,theta):
+        #limit1=a
+        #limit2=b
+        events=Numb_events(energy,theta)
+        sums=[]
+        for ang in theta:
+                sums.append(sum(Numb_events(energy,ang)))
+        return sums
+
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -819,7 +845,6 @@ ax13.set_ylabel('zenith angle (deg)')
 surf3=ax13.plot_surface(X2, Y2, Z4, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 ax13.set_title("Interaction inside can")
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
-#fig.suptitle("distribution"
 ax14 = figmuon.add_subplot(233, projection='3d')
 ax14.set_xlabel('energy (GeV)')
 ax14.set_ylabel('zenith angle (deg)')
@@ -828,7 +853,7 @@ surf2=ax14.plot_surface(X2, Y2, Z5, cmap=cm.coolwarm,linewidth=0, antialiased=Fa
 
 
 #print("_---------------______________------___DEBUG_______------_______---_--_-__-_-_-_--_-__")
-E_fixed=10**4
+E_fixed=10**7
 ax15 = figmuon.add_subplot(234)
 ax15.plot(zenithy,nu_survival_can_level(E_fixed,zenithy),'+',markersize=2)
 
@@ -836,14 +861,42 @@ ax16 = figmuon.add_subplot(235)
 ax16.plot(zenithy,nu_interaction_inside_can(E_fixed,zenithy),'+',markersize=2)
 
 ax17 = figmuon.add_subplot(236)
-#ax17.plot(zenithy,Numb_events(E_fixed,zenithy),'+',markersize=2)
 ax17.plot(zenithy,final_prbability(E_fixed,zenithy),'+',markersize=2)
-#figmuon.colorbar(surf2, shrink=0.5, aspect=5)
-#ax13 = figmuon.add_subplot(133)
-#ax13.plot(zenithy,final_prbability(x_energy,zenithy)[-1],'+',markersize=2, color='r')
+
+TeVSky = np.logspace(3,6, Number_of_points)
+PeVSky = np.logspace(6,9, Number_of_points)
+EeVSky = np.logspace(9,11, Number_of_points)
+
+Nevents=plt.figure()
+ax18=Nevents.add_subplot(231,projection='3d')
+ax18.set_title('Number of events')
+X3=x_energy
+Y3=zenithy
+Z6=Numb_events(X3,Y3)
+X3, Y3 = np.meshgrid(X3, Y3)
+surf3=ax18.plot_surface(X3, Y3, Z6, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+ax19=Nevents.add_subplot(232)
+ax19.set_title(Decimal(str(E_fixed)))
+ax19.plot(zenithy,Numb_events(E_fixed,zenithy),'+',markersize=2)
+ax20=Nevents.add_subplot(233)
+ax20.set_title('TeV Sky (1 TeV-1PeV)')
+ax20.plot(zenithy,sum_of_events(TeVSky,zenithy),'+',markersize=2,color='r')
+ax21=Nevents.add_subplot(234)
+ax21.set_title('PeV Sky (1PeV-1EeV)')
+ax21.plot(zenithy,sum_of_events(PeVSky,zenithy),'+',markersize=2,color='b')
+ax22=Nevents.add_subplot(235)
+ax22.set_title('EeV Sky (1EeV-$10^21$ eV)')
+ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 
 
-#ax13.plot(zenithy,nu_interaction_inside_can(x_energy,zenithy)[-1],'+',markersize=2, color='g')
-#ax13.plot(zenithy,nu_survival_can_level(x_energy,zenithy)[-1],'+',markersize=2, color='b')
+aeff=plt.figure()
+ax23=aeff.add_subplot(121)
+ax23.set_title('$A_{eff}$ Over')
+ax23.plot(TeVSky,A_eff(zenithy,TeVSky)[0],'+',markersize=2,color='g')
+ax24=aeff.add_subplot(122)
+ax24.set_title('$A_{eff}$ Under')
+ax24.plot(TeVSky,A_eff(zenithy,TeVSky)[1],'+',markersize=2,color='b')
+
+
 plt.show()
  
