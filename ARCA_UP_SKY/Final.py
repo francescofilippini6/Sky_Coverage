@@ -63,7 +63,7 @@ def Bjorken(x):
         else:
                 for a in range(len(ncs['minelasticityCC'])-1):
                         if x>=ncs['Energy (GeV)'][a] and x<ncs['Energy (GeV)'][a+1]:
-                                print(fitfuncUND(x,allm[a], allq[a]))
+                                print("Single Energy Value Bjorken")
                                 return fitfuncUND(x,allm[a], allq[a])
 #def fitBjorken(x, a, b, c, d, e, f, g):
 #	return a * x + b
@@ -496,11 +496,11 @@ def nu_survival_can_level(energy,theta):
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
                 if slant<=Rmu:
-                        probability.append(1)
+                        return(1)
                 else:
                         index=numb_Lint-Rmu*np.power(lint,-1)
-                        probability.append(np.exp(-index))
-                return probability
+                        return(np.exp(-index))
+
 
 def nu_interaction_inside_can(energy,theta):
         numb_Lint,status=number_of_Lint(energy,theta)
@@ -551,11 +551,11 @@ def nu_interaction_inside_can(energy,theta):
                 Rmu=radius_can(energy)
                 slant=total_slant(theta)
                 if slant<=Rmu:
-                        probability.append(1-surv)
+                        return(1-surv)
                 else:
                         index=Rmu*np.power(lint,-1)
-                        probability.append(1-np.exp(-index))
-                return probability
+                        return(1-np.exp(-index))
+
 
 #-------------------------------------------------------------
 
@@ -602,12 +602,18 @@ def A_eff(energy,theta):
                         under.append(ang)
                 else:
                         over.append(ang)
+        print(over)
+        print(under)
+        print(energy)
         AeffOver=[]
         AeffUnder=[]
         for ene in energy:
-                AeffOver.append(A_geom*final_prbability(ene,over))
-                AeffUnder.append(A_geom*final_prbability(ene,under))
-        return AeffOver,AeffUnder
+                print(ene)
+                AeffOver.append(A_geom*final_prbability(ene,theta[1]))
+                AeffUnder.append(A_geom*final_prbability(ene,theta[1]))
+                print("END")
+        print((AeffOver,AeffUnder))
+        return (AeffOver,AeffUnder)
                 
 def nu_flux(energy):
         ss=[]
@@ -685,7 +691,7 @@ for bb in stheta:
 #-------------------------------------------------------------
 #surface plot number generators
 #-------------------------------------------------------------
-Number_of_points=150
+Number_of_points=10
 #x_energy = np.linspace(10,10**11, Number_of_points)
 x_energy = np.logspace(1,7, Number_of_points)
 zenithy=np.linspace(0,179.9,Number_of_points)
@@ -892,10 +898,10 @@ ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 aeff=plt.figure()
 ax23=aeff.add_subplot(121)
 ax23.set_title('$A_{eff}$ Over')
-ax23.plot(TeVSky,A_eff(zenithy,TeVSky)[0],'+',markersize=2,color='g')
+ax23.plot(TeVSky,A_eff(TeVSky,zenithy)[0],'+',markersize=2,color='g')
 ax24=aeff.add_subplot(122)
 ax24.set_title('$A_{eff}$ Under')
-ax24.plot(TeVSky,A_eff(zenithy,TeVSky)[1],'+',markersize=2,color='b')
+ax24.plot(TeVSky,A_eff(TeVSky,zenithy)[1],'+',markersize=2,color='b')
 
 
 plt.show()
