@@ -486,7 +486,7 @@ def nu_survival_can_level(energy,theta):
                 slant=total_slant(theta)
                 for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
-                                print(theta[ang])
+                                #print(theta[ang])
                                 probability.append(1)
                         else:
                                 index=numb_Lint[ang]-Rmu*np.power(lint,-1)
@@ -543,7 +543,7 @@ def nu_interaction_inside_can(energy,theta):
                 for ang in range(len(theta)):
                         if slant[ang]<=Rmu:
                                 probability.append(1-surv[ang])
-                                print(theta[ang])
+                                #print(theta[ang])
                         else:
                                 index=Rmu*np.power(lint,-1)
                                 probability.append(1-np.exp(-index))
@@ -587,7 +587,7 @@ def final_prbability(energy,theta):
                 return probability
 
         elif status==3:
-                print("Final",status)
+                #print("Final",status)
                 probability=[]
                 for ang in range(len(theta)):
                         probability.append(survival[ang]*interaction[ang])
@@ -606,17 +606,31 @@ def A_eff(energy,theta):
                         under.append(ang)
                 else:
                         over.append(ang)
-        #print(over)
-        #print(under)
-        #print(energy)
         AeffOver=[]
         AeffUnder=[]
-        for ene in energy:
-                AeffOver.append(sum(final_prbability(ene,over)))
-                AeffUnder.append(sum(final_prbability(ene,under)))
-
-        AeffOver=np.array(AeffOver)*A_geom
-        AeffUnder=np.array(AeffUnder)*A_geom 
+        reco_eff=0.1
+        A_times_recoeff=A_geom*reco_eff*10**-4 #area in m^2 
+        
+        #working configuration
+        #for ene in energy:
+        #AeffOver.append(sum(final_prbability(ene,over)))
+                #        AeffOver.append(final_prbability(ene,over[1]))
+                #AeffUnder.append(sum(final_prbability(ene,under)))
+                #       AeffUnder.append(final_prbability(ene,under[-1]))
+        for ang in theta:
+                ciccio1=[]
+                ciccio2=[]
+                if ang < 90:
+                        for ene in energy:
+                                ciccio1.append(A_times_recoeff*final_prbability(ene,ang))
+                        AeffOver.append(ciccio1)
+                else:
+                        for ene in energy:
+                                ciccio2.append(A_times_recoeff*final_prbability(ene,ang))
+                        AeffUnder.append(ciccio2)
+        print(len(AeffOver))
+        #AeffOver=np.array(AeffOver)#*A_times_recoeff
+        #AeffUnder=np.array(AeffUnder)#*A_times_recoeff
         return (AeffOver,AeffUnder)
                 
 def nu_flux(energy):
@@ -901,12 +915,26 @@ ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 
 aeff=plt.figure()
 ax23=aeff.add_subplot(121)
+Over,Under=A_eff(TeVSky,zenithy)
+#print(Over)
 ax23.set_title('$A_{eff}$ Over')
-ax23.plot(TeVSky,A_eff(TeVSky,zenithy)[0],'+',markersize=2,color='g')
+sumsOver=np.zeros(len(Over[0]))
+for aefff in range(len(Over)):
+        ax23.plot(TeVSky,Over[aefff],'+',markersize=2)#,color='g')
+        sumsOver=sumsOver+np.array(Over[aefff])
+ax23.plot(TeVSky,sumsOver,'g--')
+ax23.set_xscale('log')
+ax23.set_yscale('log')
+
 ax24=aeff.add_subplot(122)
 ax24.set_title('$A_{eff}$ Under')
-ax24.plot(TeVSky,A_eff(TeVSky,zenithy)[1],'+',markersize=2,color='b')
-
+sumsUnder=np.zeros(len(Under[0]))
+for ae in range(len(Under)):
+        ax24.plot(TeVSky,Under[ae],'+',markersize=2)#,color='g')
+        sumsUnder=sumsUnder+np.array(Under[ae])
+ax24.plot(TeVSky,sumsUnder,'g--')
+ax24.set_xscale('log')
+ax24.set_yscale('log')
 
 plt.show()
  
