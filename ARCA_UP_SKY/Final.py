@@ -384,7 +384,7 @@ def number_of_Lint(energy,theta):
         elif hasattr(energy, "__len__") and np.isscalar(theta):
                 final=np.zeros(len(energy))
                 status=2
-                print("STATO",status)
+                #print("STATO",status)
                 encounter=0
                 lint=Lint(energy,'Total')
                 total=total_slant(theta)
@@ -395,7 +395,7 @@ def number_of_Lint(energy,theta):
         elif hasattr(theta, "__len__") and np.isscalar(energy):
                 final=np.zeros(len(theta))
                 status=3
-                print("STATO",status)
+                #print("STATO",status)
                 angcounter=0
                 lint=Lint(energy,'Total')
                 total=total_slant(theta)
@@ -406,7 +406,7 @@ def number_of_Lint(energy,theta):
         
         else:
                 status=4
-                print("STATO",status)
+                #print("STATO",status)
                 return total_slant(theta)/Lint(energy,'Total'),status
 #------------------------------------------------------
 # neutrino survival probability
@@ -460,7 +460,7 @@ def nu_survival_can_level(energy,theta):
                 Rmu=radius_can(energy)
                 #print("Radius can",Rmu)
                 slant=total_slant(theta)
-                print("slant",len(slant),len(theta))
+                #print("slant",len(slant),len(theta))
                 for ene in range(len(Rmu)):
                         for ang in range(len(theta)):
                                 if slant[ang]<=Rmu[ene]:
@@ -508,7 +508,7 @@ def nu_interaction_inside_can(energy,theta):
         lint=Lint(energy,'Total')  #possibility to set the CC interaction..
         surv=Survival_probability_mean(energy,theta)
         print("$P_i$")
-        print("status",status)
+        #print("status",status)
         if status==1:
                 probability=np.zeros((len(energy),len(theta)))
                 Rmu=radius_can(energy)
@@ -628,7 +628,7 @@ def A_eff(energy,theta):
                         for ene in energy:
                                 ciccio2.append(A_times_recoeff*final_prbability(ene,ang))
                         AeffUnder.append(ciccio2)
-        print(len(AeffOver))
+        #print(len(AeffOver))
         #AeffOver=np.array(AeffOver)#*A_times_recoeff
         #AeffUnder=np.array(AeffUnder)#*A_times_recoeff
         return (AeffOver,AeffUnder)
@@ -645,6 +645,9 @@ def nu_flux(energy):
  
         
 def Numb_events(energy,theta):
+        """
+        differetial number of events in energy and in theta
+        """
         numb_Lint,status=number_of_Lint(energy,theta)
         factor=year*A_geom*2*np.pi
         proba=final_prbability(energy,theta)
@@ -653,18 +656,18 @@ def Numb_events(energy,theta):
                 events=np.zeros((len(energy),len(theta)))
                 for ene in range(len(energy)):
                         for ang in range(len(theta)):
-                                events[ene][ang]=proba[ene][ang]*flux[ene]*factor/len(energy)#*np.sin(theta[ang])
+                                events[ene][ang]=proba[ene][ang]*flux[ene]*factor#*np.sin(theta[ang])
                 return events
         elif status==2:
                 events=[]
                 for ene in range(len(energy)):
-                        events.append(proba[ene]*flux[ene]*factor/len(energy))#*np.sin(theta))
+                        events.append(proba[ene]*flux[ene]*factor)#*np.sin(theta))
                 return events
         
         elif status==3:
                 events=[]
                 for ang in range(len(theta)):
-                        events.append(proba[ang]*flux*factor/len(theta))#*np.sin(theta[ang]))
+                        events.append(proba[ang]*flux*factor)#*np.sin(theta[ang]))
                 return events
         elif status==4:
                 return proba*flux*factor*np.sin(theta)
@@ -673,19 +676,24 @@ def Numb_events(energy,theta):
 def sum_of_events(energy,theta):
         #limit1=a
         #limit2=b
-        events=Numb_events(energy,theta)
+        #events=Numb_events(energy,theta)
         sums=[]
         for ang in theta:
-                sums.append(sum(Numb_events(energy,ang)))
+                sums.append(sum(Numb_events(energy,ang))/len(energy))
         return sums
 
 def check(energy,theta):
         events=sum_of_events(energy,theta)
+        selection=[]
         cumulative=[]
-        for ang in theta:
-                if ang>90:
-                        cumulative.append(events[ang])
-        print(sum(cumulative))
+        for ang in range(len(theta)):
+                if theta[ang]>90:
+                        selection.append(events[ang])
+                        cumulative.append(sum(selection))
+                else:
+                        cumulative.append(0)
+        print("CUMULATIVE",sum(cumulative))
+        return cumulative
         
 #-------------------------------------------------------------
 # Plotting functions
@@ -717,7 +725,7 @@ for bb in stheta:
 #-------------------------------------------------------------
 #surface plot number generators
 #-------------------------------------------------------------
-Number_of_points=30
+Number_of_points=20
 #x_energy = np.linspace(10,10**11, Number_of_points)
 x_energy = np.logspace(1,7, Number_of_points)
 zenithy=np.linspace(0,179.9,Number_of_points)
@@ -913,10 +921,14 @@ ax19.plot(zenithy,Numb_events(E_fixed,zenithy),'+',markersize=2)
 ax20=Nevents.add_subplot(233)
 ax20.set_title('TeV Sky (1 TeV-1PeV)')
 ax20.plot(zenithy,sum_of_events(TeVSky,zenithy),'+',markersize=2,color='r')
-ax21=Nevents.add_subplot(234)
+ax20_1=Nevents.add_subplot(234)
+ax20_1.set_title('Cumulative 90-180 (1 TeV-1 PeV)')
+ax20_1.plot(zenithy,check(TeVSky,zenithy),'+',markersize=2,color='r')
+
+ax21=Nevents.add_subplot(235)
 ax21.set_title('PeV Sky (1PeV-1EeV)')
 ax21.plot(zenithy,sum_of_events(PeVSky,zenithy),'+',markersize=2,color='b')
-ax22=Nevents.add_subplot(235)
+ax22=Nevents.add_subplot(236)
 ax22.set_title('EeV Sky (1EeV-$10^21$ eV)')
 ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 
