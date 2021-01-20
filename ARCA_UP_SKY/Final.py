@@ -609,7 +609,7 @@ def A_eff(energy,theta):
         AeffOver=[]
         AeffUnder=[]
         reco_eff=0.1
-        A_times_recoeff=A_geom*reco_eff*10**-4 #area in m^2 
+        A_times_recoeff=1/len(energy)*A_geom*10**-4 #area in m^2 
         
         #working configuration
         #for ene in energy:
@@ -912,6 +912,29 @@ ax22=Nevents.add_subplot(235)
 ax22.set_title('EeV Sky (1EeV-$10^21$ eV)')
 ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 
+
+aeff=plt.figure()
+ax23=aeff.add_subplot(121)
+Over,Under=A_eff(TeVSky,zenithy)
+#print(Over)
+ax23.set_title('$A_{eff}$ Over')
+sumsOver=np.zeros(len(Over[0]))
+for aefff in range(len(Over)):
+        ax23.plot(TeVSky,Over[aefff],'+',markersize=2)#,color='g')
+        sumsOver=sumsOver+np.array(Over[aefff])
+ax23.plot(TeVSky,sumsOver,'g--')
+ax23.set_xscale('log')
+ax23.set_yscale('log')
+
+ax24=aeff.add_subplot(122)
+ax24.set_title('$A_{eff}$ Under')
+sumsUnder=np.zeros(len(Under[0]))
+for ae in range(len(Under)):
+        ax24.plot(TeVSky,Under[ae],'+',markersize=2)#,color='g')
+        sumsUnder=sumsUnder+np.array(Under[ae])
+ax24.plot(TeVSky,sumsUnder,'g--')
+ax24.set_xscale('log')
+ax24.set_yscale('log')
 
 aeff=plt.figure()
 ax23=aeff.add_subplot(121)
