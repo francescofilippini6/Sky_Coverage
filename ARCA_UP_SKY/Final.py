@@ -637,7 +637,7 @@ def nu_flux(energy):
         ss=[]
         if hasattr(energy, "__len__"):
                 for ene  in energy:
-                        ss.append(10**-8*ene**-2)
+                        ss.append(10**-8*ene**-2)   #evts/GeV*s*cm^2
                         
                 return ss
         else:
@@ -653,18 +653,18 @@ def Numb_events(energy,theta):
                 events=np.zeros((len(energy),len(theta)))
                 for ene in range(len(energy)):
                         for ang in range(len(theta)):
-                                events[ene][ang]=proba[ene][ang]*flux[ene]*factor#*np.sin(theta[ang])
+                                events[ene][ang]=proba[ene][ang]*flux[ene]*factor/len(energy)#*np.sin(theta[ang])
                 return events
         elif status==2:
                 events=[]
                 for ene in range(len(energy)):
-                        events.append(proba[ene]*flux[ene]*factor)#*np.sin(theta))
+                        events.append(proba[ene]*flux[ene]*factor/len(energy))#*np.sin(theta))
                 return events
         
         elif status==3:
                 events=[]
                 for ang in range(len(theta)):
-                        events.append(proba[ang]*flux*factor)#*np.sin(theta[ang]))
+                        events.append(proba[ang]*flux*factor/len(theta))#*np.sin(theta[ang]))
                 return events
         elif status==4:
                 return proba*flux*factor*np.sin(theta)
@@ -679,6 +679,14 @@ def sum_of_events(energy,theta):
                 sums.append(sum(Numb_events(energy,ang)))
         return sums
 
+def check(energy,theta):
+        events=sum_of_events(energy,theta)
+        cumulative=[]
+        for ang in theta:
+                if ang>90:
+                        cumulative.append(events[ang])
+        print(sum(cumulative))
+        
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
@@ -709,7 +717,7 @@ for bb in stheta:
 #-------------------------------------------------------------
 #surface plot number generators
 #-------------------------------------------------------------
-Number_of_points=100
+Number_of_points=30
 #x_energy = np.linspace(10,10**11, Number_of_points)
 x_energy = np.logspace(1,7, Number_of_points)
 zenithy=np.linspace(0,179.9,Number_of_points)
@@ -914,6 +922,7 @@ ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
 
 
 aeff=plt.figure()
+aeff.suptitle('$A_{eff}$ TeV Sky')
 ax23=aeff.add_subplot(121)
 Over,Under=A_eff(TeVSky,zenithy)
 #print(Over)
@@ -936,28 +945,54 @@ ax24.plot(TeVSky,sumsUnder,'g--')
 ax24.set_xscale('log')
 ax24.set_yscale('log')
 
-aeff=plt.figure()
-ax23=aeff.add_subplot(121)
-Over,Under=A_eff(TeVSky,zenithy)
+aeff1=plt.figure()
+aeff1.suptitle('$A_{eff}$ PeV Sky')
+ax25=aeff1.add_subplot(121)
+Over1,Under1=A_eff(PeVSky,zenithy)
 #print(Over)
-ax23.set_title('$A_{eff}$ Over')
-sumsOver=np.zeros(len(Over[0]))
-for aefff in range(len(Over)):
-        ax23.plot(TeVSky,Over[aefff],'+',markersize=2)#,color='g')
-        sumsOver=sumsOver+np.array(Over[aefff])
-ax23.plot(TeVSky,sumsOver,'g--')
-ax23.set_xscale('log')
-ax23.set_yscale('log')
+ax25.set_title('$A_{eff}$ Over')
+sumsOver1=np.zeros(len(Over1[0]))
+for aefff1 in range(len(Over1)):
+        ax25.plot(PeVSky,Over1[aefff1],'+',markersize=2)#,color='g')
+        sumsOver1=sumsOver1+np.array(Over1[aefff1])
+ax25.plot(PeVSky,sumsOver1,'g--')
+ax25.set_xscale('log')
+ax25.set_yscale('log')
 
-ax24=aeff.add_subplot(122)
-ax24.set_title('$A_{eff}$ Under')
-sumsUnder=np.zeros(len(Under[0]))
-for ae in range(len(Under)):
-        ax24.plot(TeVSky,Under[ae],'+',markersize=2)#,color='g')
-        sumsUnder=sumsUnder+np.array(Under[ae])
-ax24.plot(TeVSky,sumsUnder,'g--')
-ax24.set_xscale('log')
-ax24.set_yscale('log')
+ax26=aeff1.add_subplot(122)
+ax26.set_title('$A_{eff}$ Under')
+sumsUnder1=np.zeros(len(Under1[0]))
+for ae1 in range(len(Under1)):
+        ax26.plot(PeVSky,Under1[ae1],'+',markersize=2)#,color='g')
+        sumsUnder1=sumsUnder1+np.array(Under1[ae1])
+ax26.plot(PeVSky,sumsUnder1,'g--')
+ax26.set_xscale('log')
+ax26.set_yscale('log')
+
+
+aeff2=plt.figure()
+aeff2.suptitle('$A_{eff}$ EeV Sky')
+ax27=aeff2.add_subplot(121)
+Over2,Under2=A_eff(EeVSky,zenithy)
+#print(Over)
+ax27.set_title('$A_{eff}$ Over')
+sumsOver2=np.zeros(len(Over2[0]))
+for aefff2 in range(len(Over2)):
+        ax27.plot(EeVSky,Over2[aefff2],'+',markersize=2)#,color='g')
+        sumsOver2=sumsOver2+np.array(Over2[aefff2])
+ax27.plot(EeVSky,sumsOver2,'g--')
+ax27.set_xscale('log')
+ax27.set_yscale('log')
+
+ax28=aeff2.add_subplot(122)
+ax28.set_title('$A_{eff}$ Under')
+sumsUnder2=np.zeros(len(Under2[0]))
+for ae2 in range(len(Under2)):
+        ax28.plot(EeVSky,Under2[ae2],'+',markersize=2)#,color='g')
+        sumsUnder2=sumsUnder2+np.array(Under2[ae2])
+ax28.plot(EeVSky,sumsUnder2,'g--')
+ax28.set_xscale('log')
+ax28.set_yscale('log')
 
 plt.show()
  
