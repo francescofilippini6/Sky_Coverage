@@ -8,6 +8,7 @@ from scipy.optimize import curve_fit
 from scipy.integrate import quad
 from mpl_toolkits.mplot3d import Axes3D
 from decimal import Decimal
+from scipy.interpolate import InterpolatedUnivariateSpline
 #-----------------------------------------------
 # dataframe with the cross section points as in
 # "Ultrahigh-Energy Neutrino Interactions" Raj Gandhi
@@ -662,17 +663,17 @@ def Numb_events(energy,theta):
                                 events[ene][ang]=proba[ene][ang]*flux[ene]*factor*binwidth
                 return events
         elif status==2:
-                binwidth=(energy[-1]-energy[0])/len(energy)
                 events=[]
-                for ene in range(len(energy)):
-                        events.append(proba[ene]*flux[ene]*factor*binwidth)
+                for ene in range(len(energy)-1):
+                        binwidth=(energy[ene+1]-energy[ene])
+                        events.append((proba[ene+1]*flux[ene+1]+proba[ene]*flux[ene])*factor*binwidth/2)
                 return events
         
         elif status==3:
                 events=[]
-                binwidth=(theta[-1]-theta[0])/len(theta)
+                #binwidth=(theta[-1]-theta[0])/len(theta)
                 for ang in range(len(theta)):
-                        events.append(proba[ang]*flux*factor*binwidth)
+                        events.append(proba[ang]*flux*factor)#*binwidth)
                 return events
         elif status==4:
                 return proba*flux*factor*np.sin(np.radians(theta))
@@ -691,47 +692,51 @@ def check(energy,theta):
         events=sum_of_events(energy,theta)
         selection=[]
         cumulative=[]
-        binwidth=(theta[-1]-theta[0])/len(theta)
-        for ang in range(len(theta)):
+        cumulative.append(0)
+        for ang in range(len(theta)-1):
                 if theta[ang]>90:
-                        selection.append(events[ang]*binwidth*abs(np.sin(np.radians(ang))))
+                        binwidth=(theta[ang+1]-theta[ang])
+                        selection.append((events[ang+1]*abs(np.sin(np.radians(theta[ang+1])))+events[ang]*abs(np.sin(np.radians(theta[ang])))*binwidth/2)
                         cumulative.append(sum(selection))
                 else:
-                        cumulative.append(0)
-        print("CUMULATIVE",sum(cumulative))
+                        selection.append(0)
+                        cumulative.append(sum(selection))
+                        #cumulative.append(0)
+        #        cumulative=sum(selection)
+        #print("CUMULATIVE",cumulative)
         return cumulative
         
 #-------------------------------------------------------------
 # Plotting functions
 #-------------------------------------------------------------
 
-x_lint = np.logspace(1,11, 100)#np.linspace(10,0.99*10**12, 100000)
-x_lineO = np.logspace(6,12, 100)#x_lineO = np.linspace(10**6,10**12, 100)
-y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
-y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
-y_line_total=[]
-for a in range(len(y_lineO)):
-        y_line_total.append(y_lineO[a]+y_lineNC[a])
+#x_lint = np.logspace(1,11, 100)#np.linspace(10,0.99*10**12, 100000)
+#x_lineO = np.logspace(6,12, 100)#x_lineO = np.linspace(10**6,10**12, 100)
+#y_lineO=fitfuncOVE(constCC,indexCC,x_lineO)
+#y_lineNC=fitfuncOVE(constNC,indexNC,x_lineO)
+#y_line_total=[]
+#for a in range(len(y_lineO)):
+#        y_line_total.append(y_lineO[a]+y_lineNC[a])
         
-radius=np.linspace(0,EarthRadius,100)
-hatm=np.linspace(EarthRadius+5,EarthRadius+atm_sup_limit,100)
-hsea=np.linspace(EarthRadius+0.1,EarthRadius+4.9999,100)
-ttheta=np.linspace(0.1,89.9,100)
-stheta=np.linspace(90.01,179.9,100)
-cc=[]
-ff=[]
-for aa in stheta:
-     cc.append(int_lentgth_earth(aa))   
-     ff.append(sea_profile(aa))
+#radius=np.linspace(0,EarthRadius,100)
+#hatm=np.linspace(EarthRadius+5,EarthRadius+atm_sup_limit,100)
+#hsea=np.linspace(EarthRadius+0.1,EarthRadius+4.9999,100)
+#ttheta=np.linspace(0.1,89.9,100)
+#stheta=np.linspace(90.01,179.9,100)
+#cc=[]
+#ff=[]
+#for aa in stheta:
+#     cc.append(int_lentgth_earth(aa))   
+#     ff.append(sea_profile(aa))
      #print(stheta)
-dd=[]
-for bb in stheta:
-        dd.append(int_length_atm(bb))
+#dd=[]
+#for bb in stheta:
+#        dd.append(int_length_atm(bb))
 
 #-------------------------------------------------------------
 #surface plot number generators
 #-------------------------------------------------------------
-Number_of_points=500
+Number_of_points=10
 #x_energy = np.linspace(10,10**11, Number_of_points)
 x_energy = np.logspace(1,7, Number_of_points)
 zenithy=np.linspace(0,179.9,Number_of_points)
@@ -740,99 +745,99 @@ zenithy=np.linspace(0,179.9,Number_of_points)
 #-------------------------------------------------------------
 # Neutrino functions: Cross Section CC, Bjorken y, Interaction Length in (g/cm^2)
 #-------------------------------------------------------------
-f=plt.figure()
-ax1=f.add_subplot(311)
-df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='green',ax=ax1, logx=True, logy=True)
-simulated.plot(kind='scatter',x='Energy (GeV)',y='Total_CS',color='red',ax=ax1, logx=True, logy=True)
-simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossSCC',color='green',ax=ax1, logx=True, logy=True)
-simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossNC',color='blue',ax=ax1, logx=True, logy=True)
+#f=plt.figure()
+#ax1=f.add_subplot(311)
+#df.plot(kind='scatter',x='Energy (GeV)',y='CrossSectionCC',color='green',ax=ax1, logx=True, logy=True)
+#simulated.plot(kind='scatter',x='Energy (GeV)',y='Total_CS',color='red',ax=ax1, logx=True, logy=True)
+#simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossSCC',color='green',ax=ax1, logx=True, logy=True)
+#simulated.plot(kind='scatter',x='Energy (GeV)',y='CrossNC',color='blue',ax=ax1, logx=True, logy=True)
 #ax1.plot(x_line,y_line,'b--')
-ax1.plot(x_lineO,y_lineO,'+',markersize=2, color='g')#'g--')
-ax1.plot(x_lineO,y_lineNC,'+',markersize=2, color='b')#'b--')
-ax1.plot(x_lineO,y_line_total,'+',markersize=2, color='r')
-ax1.set_title('nu N CC Cross Section')
-ax2=f.add_subplot(312)
-df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
-ax2.plot(x_lint,Bjorken(x_lint),'+',markersize=2, color='r')
-ax2.set_title('Mean Bjorken y nu N CC')
-ax3=f.add_subplot(313)
+#ax1.plot(x_lineO,y_lineO,'+',markersize=2, color='g')#'g--')
+#ax1.plot(x_lineO,y_lineNC,'+',markersize=2, color='b')#'b--')
+#ax1.plot(x_lineO,y_line_total,'+',markersize=2, color='r')
+#ax1.set_title('nu N CC Cross Section')
+#ax2=f.add_subplot(312)
+#df.plot(kind='scatter',x='Energy (GeV)',y='minelasticityCC',color='g',ax=ax2,logx=True,logy=True)
+#ax2.plot(x_lint,Bjorken(x_lint),'+',markersize=2, color='r')
+#ax2.set_title('Mean Bjorken y nu N CC')
+#ax3=f.add_subplot(313)
 #ax3.plot(x_line,Lint(x_line),'r--')
-ax3.plot(x_lint,Lint(x_lint,'CC'),'+',markersize=2, color='g')#'g--')
-ax3.plot(x_lint,Lint(x_lint,'Total'),'+',markersize=2, color='r')#'r--')
-ax3.plot(x_lint,Lint(x_lint,'NC'),'+',markersize=2, color='b')#'b--')
-ax3.set_yscale('log')
-ax3.set_xscale('log')
-ax3.set_ylabel('Lint (g/cm^2)')
-ax3.set_xlabel('E_nu (GeV)')
-ax3.set_title('Interaction Length')
-f.suptitle('Neutrino property functions')
+#ax3.plot(x_lint,Lint(x_lint,'CC'),'+',markersize=2, color='g')#'g--')
+#ax3.plot(x_lint,Lint(x_lint,'Total'),'+',markersize=2, color='r')#'r--')
+#ax3.plot(x_lint,Lint(x_lint,'NC'),'+',markersize=2, color='b')#'b--')
+#ax3.set_yscale('log')
+#ax3.set_xscale('log')
+#ax3.set_ylabel('Lint (g/cm^2)')
+#ax3.set_xlabel('E_nu (GeV)')
+#ax3.set_title('Interaction Length')
+#f.suptitle('Neutrino property functions')
 #-------------------------------------------------------------
 # Earth: 0) density profile vs radius; 4) slant depth (g/cm^2) vs angle
 #-------------------------------------------------------------
 
-f2=plt.figure()
-ax=f2.add_subplot(121)
-ax.plot(radius, density_profile(radius),'b-')
-ax.set_ylabel('Density')
-ax.set_xlabel('Earth radius (km)')
-ax.set_title('Earth density profile')
-ax4=f2.add_subplot(122)
+#f2=plt.figure()
+#ax=f2.add_subplot(121)
+#ax.plot(radius, density_profile(radius),'b-')
+#ax.set_ylabel('Density')
+#ax.set_xlabel('Earth radius (km)')
+#ax.set_title('Earth density profile')
+#ax4=f2.add_subplot(122)
 #ax4.plot(stheta,int_lentgth_earth(stheta),'b--')
-ax4.plot(stheta,cc,'+',markersize=2, color='b')
-ax4.set_title('slant depth')
-ax4.set_ylabel('x rho (g/cm^2)')
-ax4.set_xlabel('zenith angle (deg)')
-f2.suptitle('Earth')
+#ax4.plot(stheta,cc,'+',markersize=2, color='b')
+#ax4.set_title('slant depth')
+#ax4.set_ylabel('x rho (g/cm^2)')
+#ax4.set_xlabel('zenith angle (deg)')
+#f2.suptitle('Earth')
 #-------------------------------------------------------------
 # Atmosphere: 5) density profile vs height ; 6) slanth depth (g/cm^2) vs angle
 #-------------------------------------------------------------
 
-f3=plt.figure()
-ax5=f3.add_subplot(121)
-ax5.plot(hatm, atmosphere(hatm),'+',markersize=2, color='g')
-ax5.set_ylabel('Density')
-ax5.set_xlabel('Atmoosphere height (km)')
-ax5.set_yscale('log')
-ax6=f3.add_subplot(122)
+#f3=plt.figure()
+#ax5=f3.add_subplot(121)
+#ax5.plot(hatm, atmosphere(hatm),'+',markersize=2, color='g')
+#ax5.set_ylabel('Density')
+#ax5.set_xlabel('Atmoosphere height (km)')
+#ax5.set_yscale('log')
+#ax6=f3.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
-ax6.plot(stheta,dd,'+',markersize=2, color='b')#'g--')
-ax6.set_ylabel('x rho (g/cm^2)')
-ax6.set_xlabel('zenith angle (deg)')
-ax6.set_yscale('log')
-f3.suptitle('Atmosphere')
+#ax6.plot(stheta,dd,'+',markersize=2, color='b')#'g--')
+#ax6.set_ylabel('x rho (g/cm^2)')
+#ax6.set_xlabel('zenith angle (deg)')
+#ax6.set_yscale('log')
+#f3.suptitle('Atmosphere')
 #-------------------------------------------------------------
 # Sea: 7) density profile vs height (0 = sea bed, 3.5*10**5 sea level for ARCA;
 #      8) slanth depth (g/cm^2) vs angle
 #-------------------------------------------------------------
 
-f4=plt.figure()
-ax7=f4.add_subplot(121)
-ax7.plot(hsea, sea(hsea),'+',markersize=2, color='b')
-ax7.set_ylabel('Sea Density')
-ax7.set_xlabel('Sea height (km)')
-ax8=f4.add_subplot(122)
+#f4=plt.figure()
+#ax7=f4.add_subplot(121)
+#ax7.plot(hsea, sea(hsea),'+',markersize=2, color='b')
+#ax7.set_ylabel('Sea Density')
+#ax7.set_xlabel('Sea height (km)')
+#ax8=f4.add_subplot(122)
 #ax6.plot(stheta,int_length_atm(stheta),'b--')
 #ax8.plot(ttheta,sea_profile((3.5+EarthRadius)*10**5,ttheta),'g--')
-ax8.plot(stheta,ff,'g--')
+#ax8.plot(stheta,ff,'g--')
 #ax8.plot(stheta,sea_profile(3.5+EarthRadius),'g--')
-ax8.set_ylabel('x rho (g/cm^2)')
-ax8.set_xlabel('zenith angle (deg)')
-ax8.set_yscale('log')
-f4.suptitle('Sea')
+#ax8.set_ylabel('x rho (g/cm^2)')
+#ax8.set_xlabel('zenith angle (deg)')
+#ax8.set_yscale('log')
+#f4.suptitle('Sea')
 
 #-------------------------------------------------------------
 # TOTAL SLANT DEPTH vs ZENITH ANGLE
 #-------------------------------------------------------------
-f5=plt.figure()
-ax9=f5.add_subplot(111)
-ax9.plot(zenithy,total_slant(zenithy),'+',markersize=2, color='r')
+#f5=plt.figure()
+#ax9=f5.add_subplot(111)
+#ax9.plot(zenithy,total_slant(zenithy),'+',markersize=2, color='r')
 #ax9.plot(stheta,cc,'b--')
 #ax9.plot(stheta,dd,'g--')
 #ax9.plot(stheta,sea_profile(stheta),'g--')
-ax9.set_ylabel('x rho (g/cm^2)')
-ax9.set_xlabel('zenith angle (deg)')
-ax9.set_yscale('log')
-f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
+#ax9.set_ylabel('x rho (g/cm^2)')
+#ax9.set_xlabel('zenith angle (deg)')
+#ax9.set_yscale('log')
+#f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 
 
 
@@ -841,73 +846,73 @@ f5.suptitle('TOTAL SLANT DEPTH vs ZENITH')
 #   10) Number on Lint; 11) survival probability; 12) survival at can level
 #   13) Interaction inside can;  14) 12*13= final probability
 #-------------------------------------------------------------
-fig = plt.figure()
-ax10 = fig.add_subplot(121, projection='3d')
-ax10.set_title('zenith energy # of Lint')
-X1=x_energy
-Y1=zenithy
-Z1=number_of_Lint(X1,Y1)[0]
-X1, Y1 = np.meshgrid(X1, Y1)
-surf = ax10.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-ax10.set_xlabel('energy (GeV)')
-ax10.set_ylabel('zenith angle (deg)')
+#fig = plt.figure()
+#ax10 = fig.add_subplot(121, projection='3d')
+#ax10.set_title('zenith energy # of Lint')
+#X1=x_energy
+#Y1=zenithy
+#Z1=number_of_Lint(X1,Y1)[0]
+#X1, Y1 = np.meshgrid(X1, Y1)
+#surf = ax10.plot_surface(X1, Y1, Z1, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#ax10.set_xlabel('energy (GeV)')
+#ax10.set_ylabel('zenith angle (deg)')
 #ax10.colorbar(surf, shrink=0.5, aspect=5)
-ax11 = fig.add_subplot(122, projection='3d')
-Z2=Survival_probability_mean(x_energy,zenithy)
-ax11.set_xlabel('energy (GeV)')
-ax11.set_ylabel('zenith angle (deg)')
-surf1=ax11.plot_surface(X1, Y1, Z2, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#ax11 = fig.add_subplot(122, projection='3d')
+#Z2=Survival_probability_mean(x_energy,zenithy)
+#ax11.set_xlabel('energy (GeV)')
+#ax11.set_ylabel('zenith angle (deg)')
+#surf1=ax11.plot_surface(X1, Y1, Z2, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
 #fig.suptitle("distribution")
-fig.colorbar(surf1, shrink=0.5, aspect=5)
+#fig.colorbar(surf1, shrink=0.5, aspect=5)
 
-figg= plt.figure()
-axmuon = figg.add_subplot(111)
-axmuon.set_title('muon range')
-axmuon.plot(x_energy,muon_range(x_energy),'+',markersize=2, color='r')
-axmuon.plot(x_energy,radius_can(x_energy),'+',markersize=2, color='g')
-axmuon.set_xlabel('energy (GeV)')
-axmuon.set_ylabel('Range (g/cm^2)')
-axmuon.set_xscale('log')
-
-
-figmuon = plt.figure()
-ax12 = figmuon.add_subplot(231, projection='3d')
-X2=x_energy
-Y2=zenithy
-Z3=nu_survival_can_level(X2,Y2)
-Z4=nu_interaction_inside_can(X2,Y2)
-Z5=final_prbability(X2,Y2)
-X2, Y2 = np.meshgrid(X2, Y2)
-ax12.set_xlabel('energy (GeV)')
-ax12.set_ylabel('zenith angle (deg)')
-ax12.set_title("survival at can level")
-surf2=ax12.plot_surface(X2, Y2, Z3, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#figg= plt.figure()
+#axmuon = figg.add_subplot(111)
+#axmuon.set_title('muon range')
+#axmuon.plot(x_energy,muon_range(x_energy),'+',markersize=2, color='r')
+#axmuon.plot(x_energy,radius_can(x_energy),'+',markersize=2, color='g')
+#axmuon.set_xlabel('energy (GeV)')
+#axmuon.set_ylabel('Range (g/cm^2)')
+#axmuon.set_xscale('log')
 
 
-ax13 = figmuon.add_subplot(232, projection='3d')
-ax13.set_xlabel('energy (GeV)')
-ax13.set_ylabel('zenith angle (deg)')
-surf3=ax13.plot_surface(X2, Y2, Z4, cmap=cm.coolwarm,linewidth=0, antialiased=False)
-ax13.set_title("Interaction inside can")
+#figmuon = plt.figure()
+#ax12 = figmuon.add_subplot(231, projection='3d')
+#X2=x_energy
+#Y2=zenithy
+#Z3=nu_survival_can_level(X2,Y2)
+#Z4=nu_interaction_inside_can(X2,Y2)
+#Z5=final_prbability(X2,Y2)
+#X2, Y2 = np.meshgrid(X2, Y2)
+#ax12.set_xlabel('energy (GeV)')
+#ax12.set_ylabel('zenith angle (deg)')
+#ax12.set_title("survival at can level")
+#surf2=ax12.plot_surface(X2, Y2, Z3, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+
+
+#ax13 = figmuon.add_subplot(232, projection='3d')
+#ax13.set_xlabel('energy (GeV)')
+#ax13.set_ylabel('zenith angle (deg)')
+#surf3=ax13.plot_surface(X2, Y2, Z4, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#ax13.set_title("Interaction inside can")
 #plt.imshow(number_of_Lint(x_lint,zenithy),origin='lower',interpolation='none')
-ax14 = figmuon.add_subplot(233, projection='3d')
-ax14.set_xlabel('energy (GeV)')
-ax14.set_ylabel('zenith angle (deg)')
-ax14.set_title("Final Probability")
-surf2=ax14.plot_surface(X2, Y2, Z5, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#ax14 = figmuon.add_subplot(233, projection='3d')
+#ax14.set_xlabel('energy (GeV)')
+#ax14.set_ylabel('zenith angle (deg)')
+#ax14.set_title("Final Probability")
+#surf2=ax14.plot_surface(X2, Y2, Z5, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 
 
 #print("_---------------______________------___DEBUG_______------_______---_--_-__-_-_-_--_-__")
 E_fixed=10**7
-ax15 = figmuon.add_subplot(234)
-ax15.plot(zenithy,nu_survival_can_level(E_fixed,zenithy),'+',markersize=2)
+#ax15 = figmuon.add_subplot(234)
+#ax15.plot(zenithy,nu_survival_can_level(E_fixed,zenithy),'+',markersize=2)
 
-ax16 = figmuon.add_subplot(235)
-ax16.plot(zenithy,nu_interaction_inside_can(E_fixed,zenithy),'+',markersize=2)
+#ax16 = figmuon.add_subplot(235)
+#ax16.plot(zenithy,nu_interaction_inside_can(E_fixed,zenithy),'+',markersize=2)
 
-ax17 = figmuon.add_subplot(236)
-ax17.plot(zenithy,final_prbability(E_fixed,zenithy),'+',markersize=2)
+#ax17 = figmuon.add_subplot(236)
+#ax17.plot(zenithy,final_prbability(E_fixed,zenithy),'+',markersize=2)
 
 #TeVSky = np.logspace(3,6, Number_of_points)
 #PeVSky = np.logspace(6,9, Number_of_points)
@@ -922,13 +927,13 @@ PeVSky = np.geomspace(10**6,10**9, Number_of_points)
 EeVSky = np.geomspace(10**9,10**11, Number_of_points)
 
 Nevents=plt.figure()
-ax18=Nevents.add_subplot(231,projection='3d')
-ax18.set_title('Number of events')
-X3=x_energy
-Y3=zenithy
-Z6=Numb_events(X3,Y3)
-X3, Y3 = np.meshgrid(X3, Y3)
-surf3=ax18.plot_surface(X3, Y3, Z6, cmap=cm.coolwarm,linewidth=0, antialiased=False)
+#ax18=Nevents.add_subplot(231,projection='3d')
+#ax18.set_title('Number of events')
+#X3=x_energy
+#Y3=zenithy
+#Z6=Numb_events(X3,Y3)
+#X3, Y3 = np.meshgrid(X3, Y3)
+#surf3=ax18.plot_surface(X3, Y3, Z6, cmap=cm.coolwarm,linewidth=0, antialiased=False)
 ax19=Nevents.add_subplot(232)
 ax19.set_title(Decimal(str(E_fixed)))
 ax19.plot(zenithy,Numb_events(E_fixed,zenithy),'+',markersize=2)
@@ -945,6 +950,21 @@ ax21.plot(zenithy,sum_of_events(PeVSky,zenithy),'+',markersize=2,color='b')
 ax22=Nevents.add_subplot(236)
 ax22.set_title('EeV Sky (1EeV-$10^21$ eV)')
 ax22.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='g')
+
+#Nevent2=plt.figure()
+#ax23=Nevent2.add_subplot(131)
+#ax23.plot(zenithy,sum_of_events(TeVSky,zenithy),'+',markersize=2,color='r')
+#for ene in TeVSky:
+#        ax23.plot(zenithy,Numb_events(ene,zenithy),'+',markersize=2)
+
+#ax24=Nevent2.add_subplot(132)
+#ax24.plot(zenithy,sum_of_events(PeVSky,zenithy),'+',markersize=2,color='r')
+#for ene in PeVSky:
+#        ax24.plot(zenithy,Numb_events(ene,zenithy),'+',markersize=2)
+#ax25=Nevent2.add_subplot(133)
+#ax25.plot(zenithy,sum_of_events(EeVSky,zenithy),'+',markersize=2,color='r')
+#for ene in EeVSky:
+#        ax25.plot(zenithy,Numb_events(ene,zenithy),'+',markersize=2)
 
 #aeff=plt.figure()
 #aeff.suptitle('$A_{eff}$ TeV Sky')
