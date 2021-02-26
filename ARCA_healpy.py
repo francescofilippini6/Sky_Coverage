@@ -2,6 +2,7 @@ import math as m
 import numpy as np
 import csv
 import matplotlib.pyplot as plt
+import astropy.units as u
 import pandas as pd
 import random as rnn
 import astropy.coordinates as coord
@@ -23,7 +24,7 @@ import healpy as hp
 
 
 
-location = location = EarthLocation(lon=(-15.89+180) * u.deg, lat=-36.41 * u.deg, height=-12000 * u.m)
+location = location = EarthLocation(lon=(-15.89) * u.deg, lat=36.41 * u.deg, height=-3500 * u.m)
 total=[]
 lg=[]
 bg=[]
@@ -36,9 +37,10 @@ for t in range(24):
     alt=[]
     for a in range(0,1000):
         azz.append(rnn.uniform(0,360))
-        alt.append(rnn.uniform(0,90))
+        alt.append(rnn.uniform(-90,0))
 
     local_sky=SkyCoord(azz,alt,frame=frame_hor, unit=u.deg)
+    print(local_sky)
     gal=local_sky.transform_to('galactic')
     lg.append(gal.l.deg)
     bg.append(gal.b.deg)
